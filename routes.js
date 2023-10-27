@@ -77,7 +77,61 @@ const handleRequest = async(request, response) => {
     // - getUserById(userId) from /utils/users.js
     // - notFound(response) from  /utils/responseUtils.js 
     // - sendJson(response,  payload)  from  /utils/responseUtils.js can be used to send the requested data in JSON format
-    throw new Error('Not Implemented');
+    // Check if there is a currently logged in user with admin role
+    const userCredentials = getCredentials(request);
+    if (!userCredentials) {
+      return responseUtils.basicAuthChallenge(response);
+    }
+    const loggedInUser = getUser(userCredentials[0], userCredentials[1]);
+
+    if (!loggedInUser) {
+      return responseUtils.unauthorized(response);
+    }
+
+    if (loggedInUser.role !== 'admin') {
+      return responseUtils.forbidden(response);
+    }
+
+    if (method.toUpperCase() === 'GET') {
+      // Handle GET request to retrieve a single user by ID
+      const userId = filePath.split('/').pop();
+      const user = getUserById(userId);
+      if (!user) {
+        return responseUtils.notFound(response);
+      } else {
+        return responseUtils.sendJson(response, user);
+      }
+    } else if (method.toUpperCase() === 'PUT') {
+      // Handle PUT request to update a single user by ID
+      const userId = filePath.split('/').pop();
+      const user = getUserById(userId);
+      if (!user) {
+        return responseUtils.notFound(response);
+      }
+
+      // Parse the JSON body
+      const updatedUser = await parseBodyJson(request);
+
+      // Update user's role if provided
+      if (updatedUser.role) {
+        if (updatedUser.role === 'admin' || updatedUser.role === 'customer') {
+          user.role = updatedUser.role;
+        } else {
+          return responseUtils.badRequest(response, 'Invalid role');
+        }
+      }
+
+      return responseUtils.sendJson(response, user);
+    } else if (method.toUpperCase() === 'DELETE') {
+      // Handle DELETE request to delete a single user by ID
+      const userId = filePath.split('/').pop();
+      const deletedUser = deleteUserById(userId);
+      if (!deletedUser) {
+        return responseUtils.notFound(response);
+      } else {
+        return responseUtils.noContent(response);
+      }
+    }
   }
 
   // Default to 404 Not Found if unknown url
@@ -115,7 +169,24 @@ const handleRequest = async(request, response) => {
     // - validateUser(user) from /utils/users.js 
     // - emailInUse(user.email) from /utils/users.js
     // - badRequest(response, message) from /utils/responseUtils.js
-    throw new Error('Not Implemented');
+    // Parse the JSON body
+    const newUser = await parseBodyJson(request);
+
+    // Validate the new user
+    const validationErrors = validateUser(newUser);
+    if (validationErrors.length > 0) {
+      return responseUtils.badRequest(response, validationErrors.join(', '));
+    }
+
+    // Check if the email is already in use
+    if (emailInUse(newUser.email)) {
+      return responseUtils.badRequest(response, 'Email is already in use');
+    }
+
+    // Save the new user
+    const createdUser = saveNewUser(newUser);
+
+    return responseUtils.createdResource(response, createdUser);
   }
 };
 

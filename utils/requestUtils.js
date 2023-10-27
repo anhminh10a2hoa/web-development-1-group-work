@@ -11,7 +11,22 @@ const getCredentials = request => {
   //       You need to first decode the header back to its original form ("email:password").
   //  See: https://attacomsian.com/blog/nodejs-base64-encode-decode
   //       https://stackabuse.com/encoding-and-decoding-base64-strings-in-node-js/
-  throw new Error('Not Implemented');
+  const authHeader = request.headers.authorization;
+
+  if (authHeader) {
+    // The Authorization header format is "Basic base64String", so we need to extract the base64String part.
+    const base64Credentials = authHeader.split(' ')[1];
+    
+    // Decode the base64 string to get the original "email:password" string
+    const decodedCredentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+    
+    // Split the decoded string into an array of username and password
+    const [username, password] = decodedCredentials.split(':');
+    
+    return [username, password];
+  } else {
+    return null; // Header is missing
+  }
 };
 
 /**
@@ -36,8 +51,11 @@ const acceptsJson = request => {
  * @returns {boolean}
  */
 const isJson = request => {
-  // TODO: 8.4 Check whether request "Content-Type" is JSON or not
-  throw new Error('Not Implemented');
+  // Check whether request "Content-Type" is JSON or not
+  const contentTypeHeader = request.headers['content-type'] || '';
+
+  // Check if the Content-Type header includes 'application/json'
+  return contentTypeHeader.includes('application/json');
 };
 
 /**

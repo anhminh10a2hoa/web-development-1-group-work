@@ -82,7 +82,8 @@ const getUser = (email, password) => {
  */
 const getUserById = userId => {
   // TODO: 8.4 Find user by user id
-  throw new Error('Not Implemented');
+  const userFound = data.users.find(user => user.id === userId);
+  return userFound && {...userFound };
 };
 
 /**
@@ -94,7 +95,13 @@ const getUserById = userId => {
 const deleteUserById = userId => {
   // TODO: 8.4 Delete user with a given id
   // Hint: Array's findIndex() with user ID can could be used to find the user, and Array's splice() method can be used to "extract" the user object.
-  throw new Error('Not Implemented');
+  const index = data.users.findIndex(user => user._id === userId);
+  if (index !== -1) {
+    const deletedUser = data.users.splice(index, 1)[0];
+    return {...deletedUser };
+  } else {
+    return undefined;
+  }
 };
 
 /**
