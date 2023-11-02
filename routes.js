@@ -68,16 +68,6 @@ const handleRequest = async(request, response) => {
   }
 
   if (matchUserId(filePath)) {
-    // TODO: 8.6 Implement view, update and delete a single user by ID (GET, PUT, DELETE)
-    // You can use parseBodyJson(request) from utils/requestUtils.js to parse request body
-    // If the HTTP method of a request is OPTIONS you can use sendOptions(filePath, response) function from this module
-    // If there is no currently logged in user, you can use basicAuthChallenge(response) from /utils/responseUtils.js to ask for credentials
-    //  If the current user's role is not admin you can use forbidden(response) from /utils/responseUtils.js to send a reply
-    // Useful methods here include:
-    // - getUserById(userId) from /utils/users.js
-    // - notFound(response) from  /utils/responseUtils.js 
-    // - sendJson(response,  payload)  from  /utils/responseUtils.js can be used to send the requested data in JSON format
-    // Check if there is a currently logged in user with admin role
     const userCredentials = getCredentials(request);
     if (!userCredentials) {
       return responseUtils.basicAuthChallenge(response);
@@ -163,13 +153,6 @@ const handleRequest = async(request, response) => {
       return responseUtils.badRequest(response, 'Invalid Content-Type. Expected application/json');
     }
 
-    // TODO: 8.4 Implement registration
-    // You can use parseBodyJson(request) method from utils/requestUtils.js to parse request body.
-    // Useful methods here include:
-    // - validateUser(user) from /utils/users.js 
-    // - emailInUse(user.email) from /utils/users.js
-    // - badRequest(response, message) from /utils/responseUtils.js
-    // Parse the JSON body
     const newUser = await parseBodyJson(request);
 
     // Validate the new user

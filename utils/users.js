@@ -81,8 +81,7 @@ const getUser = (email, password) => {
  * @returns {Object|undefined}
  */
 const getUserById = userId => {
-  // TODO: 8.4 Find user by user id
-  const userFound = data.users.find(user => user.id === userId);
+  const userFound = data.users.find(user => user._id === userId);
   return userFound && {...userFound };
 };
 
@@ -93,8 +92,6 @@ const getUserById = userId => {
  * @returns {Object|undefined} deleted user or undefined if user does not exist
  */
 const deleteUserById = userId => {
-  // TODO: 8.4 Delete user with a given id
-  // Hint: Array's findIndex() with user ID can could be used to find the user, and Array's splice() method can be used to "extract" the user object.
   const index = data.users.findIndex(user => user._id === userId);
   if (index !== -1) {
     const deletedUser = data.users.splice(index, 1)[0];
@@ -130,7 +127,7 @@ const saveNewUser = user => {
   // Use generateId() to assign a unique id to the newly created user.
   const newUser = {...user };
   newUser._id = generateId();
-  if (!newUser.role) newUser.role = 'customer';
+  newUser.role = 'customer';
   data.users.push(newUser);
   return {...newUser };
 };
@@ -149,8 +146,18 @@ const saveNewUser = user => {
  * @throws {Error} error object with message "Unknown role"
  */
 const updateUserRole = (userId, role) => {
-  // TODO: 8.4 Update user's role
-  throw new Error('Not Implemented');
+  const userToUpdate = data.users.find(user => user._id === userId);
+
+  if (!userToUpdate) {
+    return undefined; // User not found
+  }
+
+  if (role !== 'customer' && role !== 'admin') {
+    throw new Error('Unknown role');
+  }
+
+  userToUpdate.role = role;
+  return { ...userToUpdate };
 };
 
 /**
