@@ -1,7 +1,7 @@
 const responseUtils = require('./utils/responseUtils');
-const { acceptsJson, isJson, parseBodyJson } = require('./utils/requestUtils');
+const { acceptsJson, isJson, parseBodyJson, getCredentials } = require('./utils/requestUtils');
 const { renderPublic } = require('./utils/render');
-const { emailInUse, getAllUsers, saveNewUser, validateUser } = require('./utils/users');
+const { emailInUse, getAllUsers, saveNewUser, validateUser, getUser } = require('./utils/users');
 
 /**
  * Known API routes and their allowed methods
@@ -57,6 +57,7 @@ const matchUserId = url => {
   return matchIdRoute(url, 'users');
 };
 
+// eslint-disable-next-line max-lines-per-function, complexity
 const handleRequest = async(request, response) => {
   const { url, method, headers } = request;
   const filePath = new URL(url, `http://${headers.host}`).pathname;
@@ -142,7 +143,14 @@ const handleRequest = async(request, response) => {
 
   // GET all users
   if (filePath === '/api/users' && method.toUpperCase() === 'GET') {
-    // TODO: 8.5 Add authentication (only allowed to users with role "admin")
+    const userCredentials = getCredentials(request);
+    if (!userCredentials) {
+      return responseUtils.basicAuthChallenge(response);
+    }
+    const loggedInUser = getUser(userCredentials[0], userCredentials[1]);
+    if (!loggedInUser || loggedInUser.role !== 'admin') {
+      return responseUtils.forbidden(response);
+    }
     return responseUtils.sendJson(response, getAllUsers());
   }
 
