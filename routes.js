@@ -76,10 +76,10 @@ const handleRequest = async(request, response) => {
     const loggedInUser = getUser(userCredentials[0], userCredentials[1]);
 
     if (!loggedInUser) {
-      return responseUtils.unauthorized(response);
+      return responseUtils.basicAuthChallenge(response);
     }
 
-    if (loggedInUser.role !== 'admin') {
+    if(loggedInUser.role === 'customer') {
       return responseUtils.forbidden(response);
     }
 
@@ -110,6 +110,8 @@ const handleRequest = async(request, response) => {
         } else {
           return responseUtils.badRequest(response, 'Invalid role');
         }
+      } else {
+        return responseUtils.badRequest(response, 'Role is missing');
       }
 
       return responseUtils.sendJson(response, user);
@@ -120,7 +122,7 @@ const handleRequest = async(request, response) => {
       if (!deletedUser) {
         return responseUtils.notFound(response);
       } else {
-        return responseUtils.noContent(response);
+        return responseUtils.sendJson(response, deletedUser);
       }
     }
   }
