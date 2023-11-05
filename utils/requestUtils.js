@@ -9,16 +9,19 @@ const getCredentials = request => {
   const authHeader = request.headers.authorization;
 
   if (authHeader) {
-    // The Authorization header format is "Basic base64String", so we need to extract the base64String part.
-    const base64Credentials = authHeader.split(' ')[1];
-    
-    // Decode the base64 string to get the original "email:password" string
-    const decodedCredentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
-    
-    // Split the decoded string into an array of username and password
-    const [username, password] = decodedCredentials.split(':');
-    
-    return [username, password];
+    // Check if the Authorization header starts with "Basic"
+    if (authHeader.startsWith('Basic ')) {
+      // The Authorization header format is "Basic base64String", so we need to extract the base64String part.
+      const base64Credentials = authHeader.split(' ')[1];
+      // Decode the base64 string to get the original "email:password" string
+      const decodedCredentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+
+      // Split the decoded string into an array of username and password
+      const [username, password] = decodedCredentials.split(':');
+      return [username, password];
+    } else {
+      return null; // Header type is not "Basic"
+    }
   } else {
     return null; // Header is missing
   }

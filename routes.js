@@ -1,7 +1,7 @@
 const responseUtils = require('./utils/responseUtils');
 const { acceptsJson, isJson, parseBodyJson, getCredentials } = require('./utils/requestUtils');
 const { renderPublic } = require('./utils/render');
-const { emailInUse, getAllUsers, saveNewUser, validateUser, getUser } = require('./utils/users');
+const { emailInUse, getAllUsers, saveNewUser, validateUser, getUser, deleteUserById, getUserById } = require('./utils/users');
 
 /**
  * Known API routes and their allowed methods

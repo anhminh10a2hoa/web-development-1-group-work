@@ -69,8 +69,20 @@ const postOrPutJSON = async(url, method, data = {}) => {
  * @returns {Promise<*>} promise that resolves to the parsed JSON
  */
 const deleteResource = async url => {
-  // TODO: 8.6 Implement this
-  throw new Error('Not Implemented');
+  const response = await fetch(url, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+    headers: {
+      Accept: 'application/json',
+    }
+  });
+
+  if (!response.ok) throw new Error('Network response was not OK');
+  if (response.status < 200 || response.status > 400) {
+    throw new Error(`Received "${response.status} ${response.statusText}"`);
+  }
+
+  return await response.json();
 };
 
 /**
@@ -116,6 +128,7 @@ const createNotification = (message, containerId, isSuccess = true) => {
 
   // Add message test inside the paragraph and append the paragraph to the container
   newParagraph.append(document.createTextNode(message));
+  console.log(container)
   container.append(newParagraph);
 
   // After five seconds remove the notification
