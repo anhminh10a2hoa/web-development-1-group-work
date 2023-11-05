@@ -6,7 +6,7 @@ const { getUser } = require('./users');
  * @param {http.IncomingMessage} request
  * @returns {Object|null} current authenticated user or null if not yet authenticated
  */
-const getCurrentUser = async request => {
+const getCurrentUser = request => {
   const credentials = getCredentials(request);
 
   if (!credentials) {

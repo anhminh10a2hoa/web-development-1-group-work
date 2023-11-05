@@ -148,7 +148,9 @@ const handleRequest = async(request, response) => {
       return responseUtils.basicAuthChallenge(response);
     }
     const loggedInUser = getUser(userCredentials[0], userCredentials[1]);
-    if (!loggedInUser || loggedInUser.role !== 'admin') {
+    if (!loggedInUser) {
+      return responseUtils.basicAuthChallenge(response);
+    } else if(loggedInUser.role === 'customer') {
       return responseUtils.forbidden(response);
     }
     return responseUtils.sendJson(response, getAllUsers());

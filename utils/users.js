@@ -67,8 +67,8 @@ const emailInUse = email => data.users.some(user => user.email === email);
  * @returns {Object|undefined}
  */
 const getUser = (email, password) => {
-  const user = data.users.find(user => user.email === email && user.password === password);
-  return user && {...user };
+  const userFound = data.users.find(user => user.email === email && user.password === password);
+  return userFound && {...userFound };
 };
 
 /**
