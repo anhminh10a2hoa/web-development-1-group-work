@@ -1,53 +1,85 @@
 const addToCart = productId => {
-  // TODO 9.2
-  // use addProductToCart(), available already from /public/js/utils.js
-  // call updateProductAmount(productId) from this file
+  // Use addProductToCart() to add the product to the cart
+  addProductToCart(productId);
+  // Update the product amount in the UI
+  updateProductAmount(productId);
 };
 
 const decreaseCount = productId => {
-  // TODO 9.2
-  // Decrease the amount of products in the cart, /public/js/utils.js provides decreaseProductCount()
-  // Remove product from cart if amount is 0,  /public/js/utils.js provides removeElement = (containerId, elementId
-
+  // Decrease the amount of products in the cart using decreaseProductCount()
+  const newCount = decreaseProductCount(productId);
+  // Update the product amount in the UI
+  updateProductAmount(productId);
+  // If the count reaches zero, remove the item from the cart and UI
+  if (newCount === 0) {
+    removeElement('cart-container', `item-row-${productId}`);
+  }
 };
 
 const updateProductAmount = productId => {
-  // TODO 9.2
-  // - read the amount of products in the cart, /public/js/utils.js provides getProductCountFromCart(productId)
-  // - change the amount of products shown in the right element's innerText
-
+  // Get the product count from the cart
+  const productCount = getProductCountFromCart(productId);
+  // Update the product amount in the UI
+  document.getElementById(`amount-${productId}`).innerText = `${productCount}x`;
 };
 
-const placeOrder = async() => {
-  // TODO 9.2
-  // Get all products from the cart, /public/js/utils.js provides getAllProductsFromCart()
-  // show the user a notification: /public/js/utils.js provides createNotification = (message, containerId, isSuccess = true)
-  // for each of the products in the cart remove them, /public/js/utils.js provides removeElement(containerId, elementId)
+const placeOrder = async () => {
+  // Get all products from the cart
+  const cartItems = getAllProductsFromCart();
+
+  // Show a notification for placing the order
+  createNotification('Successfully created an order!', 'notifications-container', true);
+
+  // Remove all cart items from the UI and clear the cart
+  cartItems.forEach(item => {
+    removeElement('cart-container', `item-row-${item.name}`);
+  });
+  clearCart();
 };
 
-(async() => {
-  // TODO 9.2
-  // - get the 'cart-container' element
-  // - use getJSON(url) to get the available products
-  // - get all products from cart
-  // - get the 'cart-item-template' template
-  // - for each item in the cart
-  //    * copy the item information to the template
-  //    * hint: add the product's ID to the created element's as its ID to 
-  //        enable editing ith 
-  //    * remember to add event listeners for cart-minus-plus-button
-  //        cart-minus-plus-button elements. querySelectorAll() can be used 
-  //        to select all elements with each of those classes, then its 
-  //        just up to finding the right index.  querySelectorAll() can be 
-  //        used on the clone of "product in the cart" template to get its two
-  //        elements with the "cart-minus-plus-button" class. Of the resulting
-  //        element array, one item could be given the ID of 
-  //        `plus-${product_id`, and other `minus-${product_id}`. At the same
-  //        time we can attach the event listeners to these elements. Something 
-  //        like the following will likely work:
-  //          clone.querySelector('button').id = `add-to-cart-${prodouctId}`;
-  //          clone.querySelector('button').addEventListener('click', () => addToCart(productId, productName));
-  //
-  // - in the end remember to append the modified cart item to the cart 
+(async () => {
+  // Get the 'cart-container' element
+  const cartContainer = document.getElementById('cart-container');
 
+  // Get the available products
+  const products = await getJSON('/api/products');
+
+  // Get all products from the cart
+  const cartItems = getAllProductsFromCart();
+
+  // Get the 'cart-item-template' template
+  const cartItemTemplate = document.getElementById('cart-item-template');
+
+  // Loop through each item in the cart
+  cartItems.forEach(item => {
+    // Clone the cart item template
+    const cartItemClone = cartItemTemplate.content.cloneNode(true);
+
+    // Get the product information
+    const product = products.find(p => p._id === item.name);
+
+    // Set the ID attributes for the cloned elements
+    const productId = product._id;
+    cartItemClone.querySelector('.item-row').id = `item-row-${productId}`;
+    cartItemClone.querySelector('h3').id = `name-${productId}`;
+    cartItemClone.querySelector('.product-price').id = `price-${productId}`;
+    cartItemClone.querySelector('.product-amount').id = `amount-${productId}`;
+    cartItemClone.querySelector('.cart-plus-button').id = `plus-${productId}`;
+    cartItemClone.querySelector('.cart-minus-button').id = `minus-${productId}`;
+
+    // Populate product information in the template clone
+    cartItemClone.querySelector('h3').textContent = product.name;
+    cartItemClone.querySelector('.product-price').textContent = `${(+product.price).toFixed(2)}`;
+    cartItemClone.querySelector('.product-amount').textContent = `${item.amount}x`;
+
+    // Add event listeners for plus and minus buttons
+    cartItemClone.querySelector('.cart-plus-button').addEventListener('click', () => addToCart(productId));
+    cartItemClone.querySelector('.cart-minus-button').addEventListener('click', () => decreaseCount(productId));
+
+    // Append the modified cart item to the cart container
+    cartContainer.appendChild(cartItemClone);
+  });
+
+  const placeOrderButton = document.getElementById('place-order-button');
+  placeOrderButton.addEventListener('click', () => placeOrder())
 })();

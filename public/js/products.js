@@ -1,17 +1,42 @@
 const addToCart = (productId, productName) => {
-  // TODO 9.2
-  // you can use addProductToCart(), available already from /public/js/utils.js
-  // for showing a notification of the product's creation, /public/js/utils.js  includes createNotification() function
+  // Add the product to the shopping cart using addProductToCart() function
+  addProductToCart(productId);
+
+  // Show a success notification
+  createNotification(`Added ${productName} to cart!`, 'notifications-container', true);
 };
 
-(async() => {
-  //TODO 9.2 
-  // - get the 'products-container' element from the /products.html
-  // - get the 'product-template' element from the /products.html
-  // - save the response from await getJSON(url) to get all the products. getJSON(url) is available to this script in products.html, as "js/utils.js" script has been added to products.html before this script file 
-  // - then, loop throug the products in the response, and for each of the products:
-  //    * clone the template
-  //    * add product information to the template clone
-  //    * remember to add an event listener for the button's 'click' event, and call addToCart() in the event listener's callback
-  // - remember to add the products to the the page
+(async () => {
+  // Get the 'products-container' element and the 'product-template' element
+  const productsContainer = document.getElementById('products-container');
+  const productTemplate = document.getElementById('product-template');
+
+  // Get all the products using the getJSON function
+  const products = await getJSON('/api/products');
+  console.log(products)
+  // Loop through the products and populate the product list
+  products.forEach(product => {
+    // Clone the product template
+    const productClone = productTemplate.content.cloneNode(true);
+
+    // Set the id attributes for the cloned elements
+    const productId = product._id;
+    console.log(`name-${productId}`)
+    productClone.querySelector(`h3`).id = `name-${productId}`;
+    productClone.querySelector('.product-description').id = `description-${productId}`;
+    productClone.querySelector('.product-price').id = `price-${productId}`;
+    productClone.querySelector('.add-to-cart').id = `add-to-cart-${productId}`;
+
+    // Populate product information in the template clone
+    productClone.querySelector(`h3`).textContent = product.name;
+    productClone.querySelector('.product-description').textContent = product.description;
+    productClone.querySelector('.product-price').textContent = `${(+product.price).toFixed(2)}`;
+
+    // Add an event listener to the "Add to cart" button
+    productClone.querySelector('.add-to-cart').addEventListener('click', () => {
+      addToCart(productId, product.name);
+    });
+    // Append the product clone to the products container
+    productsContainer.appendChild(productClone);
+  });
 })();
