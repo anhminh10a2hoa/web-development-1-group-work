@@ -5,23 +5,36 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
+    "coverage": "nyc --reporter=lcov --reporter=html --reporter=json mocha --require test/setup.test.js --ignore 'test/8.4/**/*.js' --ignore 'test/8.5/**/*.js' --ignore 'test/8.6/**/*.js' --ignore 'test/9.2/**/*.js'",
     "nodemon": "nodemon index.js",
-    "eslint": "npx eslint .",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test-8.4": "mocha --exit --timeout 10000 --recursive test/8.4",
+    "reset-db": "node ./setup/reset-db.js",
+    "eslint": "eslint .",
+    "test-8.4": "mocha  --timeout 10000 --recursive test/8.4",
     "test-8.5": "mocha --exit --timeout 10000 --recursive test/8.5",
-    "test-8.6": "mocha --exit --timeout 10000 --recursive test/8.6"
+    "test-8.6": "mocha --exit --timeout 10000 --recursive test/8.6",
+    "test-9.2": "mocha --exit --timeout 10000 --recursive test/9.2",
+    "test-9.4": "mocha --exit --timeout 10000 test/models/db.test.js test/models/env.test.js",
+    "test-9.5": "mocha --exit --timeout 10000 --recursive test/models",
+    "test-9.6": "mocha --timeout 10000 --require test/setup.test.js --ignore 'test/8.4/**/*.js' --ignore 'test/8.5/**/*.js' --ignore 'test/8.6/**/*.js' --ignore 'test/9.2/**/*.js' --ignore 'test/auth/**/*.js'",
+    "test": "mocha --timeout 10000  --require test/setup.test.js --ignore 'test/8.4/**/*.js' --ignore 'test/8.5/**/*.js' --ignore 'test/8.6/**/*.js' --ignore 'test/9.2/**/*.js'"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "c8": "^7.3.5",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
-    "eslint": "^7.12.0",
+    "eslint": "^7.12.1",
     "mocha": "^8.1.3",
     "node-mocks-http": "^1.9.0",
     "nodemon": "^2.0.4",
+    "nyc": "^15.1.0",
     "puppeteer": "^5.3.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^8.2.0",
+    "mongoose": "^5.10.10"
   }
 }
