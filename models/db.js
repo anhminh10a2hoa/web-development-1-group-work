@@ -11,7 +11,15 @@ const mongoose = require('mongoose');
  */
 const getDbUrl = () => {
   // TODO: 9.4 Implement this
-  throw new Error('Implement this');
+  // Read the MongoDB connection URL from the environment variable
+  const dbUrl = process.env.DBURL;
+
+  // If DBURL is not defined, return the default URL
+  if (!dbUrl) {
+    return 'mongodb://localhost:27017/WebShopDb';
+  }
+
+  return dbUrl;
 };
 
 function connectDB() {
