@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
     "mongoose": "^5.10.10"
   }
 }

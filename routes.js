@@ -1,23 +1,23 @@
 const responseUtils = require('./utils/responseUtils');
 const { acceptsJson, isJson, parseBodyJson, getCredentials } = require('./utils/requestUtils');
 const { renderPublic } = require('./utils/render');
-const { emailInUse, getAllUsers, saveNewUser, validateUser, getUser, deleteUserById, getUserById } = require('./utils/users');
-const { getAllProducts } = require('./utils/products');
+// Import the User model from models/user.js
+const { User } = require('./models/user');
 
 /**
  * Known API routes and their allowed methods
  *
- * Used to check allowed methods and also to send correct header value
+ * Used to check allowed methods and also to send the correct header value
  * in response to an OPTIONS request by sendOptions() (Access-Control-Allow-Methods)
  */
 const allowedMethods = {
   '/api/register': ['POST'],
   '/api/users': ['GET'],
-  '/api/products': ['GET']
+  '/api/products': ['GET'],
 };
 
 /**
- * Send response to client options request.
+ * Send a response to a client OPTIONS request.
  *
  * @param {string} filePath pathname of the request URL
  * @param {http.ServerResponse} response
@@ -28,7 +28,7 @@ const sendOptions = (filePath, response) => {
       'Access-Control-Allow-Methods': allowedMethods[filePath].join(','),
       'Access-Control-Allow-Headers': 'Content-Type,Accept',
       'Access-Control-Max-Age': '86400',
-      'Access-Control-Expose-Headers': 'Content-Type,Accept'
+      'Access-Control-Expose-Headers': 'Content-Type,Accept',
     });
     return response.end();
   }
@@ -36,109 +36,18 @@ const sendOptions = (filePath, response) => {
   return responseUtils.notFound(response);
 };
 
-/**
- * Does the url have an ID component as its last part? (e.g. /api/users/dsf7844e)
- *
- * @param {string} url filePath
- * @param {string} prefix
- * @returns {boolean}
- */
-const matchIdRoute = (url, prefix) => {
-  const idPattern = '[0-9a-z]{8,24}';
-  const regex = new RegExp(`^(/api)?/${prefix}/${idPattern}$`);
-  return regex.test(url);
-};
-
-/**
- * Does the URL match /api/users/{id}
- *
- * @param {string} url filePath
- * @returns {boolean}
- */
-const matchUserId = url => {
-  return matchIdRoute(url, 'users');
-};
-
 // eslint-disable-next-line max-lines-per-function, complexity
-const handleRequest = async(request, response) => {
+const handleRequest = async (request, response) => {
   const { url, method, headers } = request;
   const filePath = new URL(url, `http://${headers.host}`).pathname;
 
-  // serve static files from public/ and return immediately
+  // Serve static files from public/ and return immediately
   if (method.toUpperCase() === 'GET' && !filePath.startsWith('/api')) {
     const fileName = filePath === '/' || filePath === '' ? 'index.html' : filePath;
     return renderPublic(fileName, response);
   }
 
-  if (matchUserId(filePath)) {
-    const userCredentials = getCredentials(request);
-    if (!userCredentials) {
-      return responseUtils.basicAuthChallenge(response);
-    }
-    const loggedInUser = getUser(userCredentials[0], userCredentials[1]);
-
-    if (!loggedInUser) {
-      return responseUtils.basicAuthChallenge(response);
-    }
-
-    if(loggedInUser.role === 'customer') {
-      return responseUtils.forbidden(response);
-    }
-
-    if (method.toUpperCase() === 'GET') {
-      // Handle GET request to retrieve a single user by ID
-      const userId = filePath.split('/').pop();
-      const user = getUserById(userId);
-      if (!user) {
-        return responseUtils.notFound(response);
-      } else {
-        return responseUtils.sendJson(response, user);
-      }
-    } else if (method.toUpperCase() === 'PUT') {
-      // Handle PUT request to update a single user by ID
-      const userId = filePath.split('/').pop();
-      const user = getUserById(userId);
-      if (!user) {
-        return responseUtils.notFound(response);
-      }
-
-      // Parse the JSON body
-      const updatedUser = await parseBodyJson(request);
-
-      // Update user's role if provided
-      if (updatedUser.role) {
-        if (updatedUser.role === 'admin' || updatedUser.role === 'customer') {
-          user.role = updatedUser.role;
-        } else {
-          return responseUtils.badRequest(response, 'Invalid role');
-        }
-      } else {
-        return responseUtils.badRequest(response, 'Role is missing');
-      }
-
-      return responseUtils.sendJson(response, user);
-    } else if (method.toUpperCase() === 'DELETE') {
-      // Handle DELETE request to delete a single user by ID
-      const userId = filePath.split('/').pop();
-      const deletedUser = deleteUserById(userId);
-      if (!deletedUser) {
-        return responseUtils.notFound(response);
-      } else {
-        return responseUtils.sendJson(response, deletedUser);
-      }
-    }
-  }
-
-  // Default to 404 Not Found if unknown url
-  if (!(filePath in allowedMethods)) return responseUtils.notFound(response);
-
-  // See: http://restcookbook.com/HTTP%20Methods/options/
   if (method.toUpperCase() === 'OPTIONS') return sendOptions(filePath, response);
-
-  // Check for allowable methods
-  if (!allowedMethods[filePath].includes(method.toUpperCase())) {
-    return responseUtils.methodNotAllowed(response);
-  }
 
   // Require a correct accept header (require 'application/json' or '*/*')
   if (!acceptsJson(request)) {
@@ -151,39 +60,50 @@ const handleRequest = async(request, response) => {
     if (!userCredentials) {
       return responseUtils.basicAuthChallenge(response);
     }
-    const loggedInUser = getUser(userCredentials[0], userCredentials[1]);
-    if (!loggedInUser) {
+
+    const loggedInUser = await User.findOne({ email: userCredentials[0] });
+    if (!loggedInUser || !(await loggedInUser.checkPassword(userCredentials[1]))) {
       return responseUtils.basicAuthChallenge(response);
-    } else if(loggedInUser.role === 'customer') {
+    } else if (loggedInUser.role === 'customer') {
       return responseUtils.forbidden(response);
     }
-    return responseUtils.sendJson(response, getAllUsers());
+
+    // Use the User model to get all users
+    const users = await User.find();
+    return responseUtils.sendJson(response, users);
   }
 
-  // register new user
+  // Register a new user
   if (filePath === '/api/register' && method.toUpperCase() === 'POST') {
     // Fail if not a JSON request, don't allow non-JSON Content-Type
     if (!isJson(request)) {
       return responseUtils.badRequest(response, 'Invalid Content-Type. Expected application/json');
     }
 
+    // Parse the JSON body
     const newUser = await parseBodyJson(request);
 
     // Validate the new user
-    const validationErrors = validateUser(newUser);
-    if (validationErrors.length > 0) {
-      return responseUtils.badRequest(response, validationErrors.join(', '));
+    if (!(newUser.name && newUser.email && newUser.password && newUser.role)) {
+      return responseUtils.badRequest(response, 'Missing user data');
     }
 
     // Check if the email is already in use
-    if (emailInUse(newUser.email)) {
+    const existingUser = await User.findOne({ email: newUser.email });
+    if (existingUser) {
       return responseUtils.badRequest(response, 'Email is already in use');
     }
 
-    // Save the new user
-    const createdUser = saveNewUser(newUser);
+    // Create a new user using the User model
+    const createdUser = new User(newUser);
 
-    return responseUtils.createdResource(response, createdUser);
+    try {
+      // Save the new user to the database
+      await createdUser.save();
+      return responseUtils.createdResource(response, createdUser);
+    } catch (error) {
+      return responseUtils.serverError(response, 'Error creating user');
+    }
   }
 
   if (filePath === '/api/products' && method.toUpperCase() === 'GET') {
@@ -191,11 +111,23 @@ const handleRequest = async(request, response) => {
     if (!userCredentials) {
       return responseUtils.basicAuthChallenge(response);
     }
-    const loggedInUser = getUser(userCredentials[0], userCredentials[1]);
-    if (!loggedInUser) {
+
+    const loggedInUser = await User.findOne({ email: userCredentials[0] });
+    if (!loggedInUser || !(await loggedInUser.checkPassword(userCredentials[1]))) {
       return responseUtils.basicAuthChallenge(response);
     }
-    return responseUtils.sendJson(response, getAllProducts());
+
+    // Use the appropriate logic to get all products (you might have your own implementation)
+    const products = await getAllProducts();
+    return responseUtils.sendJson(response, products);
+  }
+
+  // Default to 404 Not Found if unknown URL
+  if (!(filePath in allowedMethods)) return responseUtils.notFound(response);
+
+  // Check for allowable methods
+  if (!allowedMethods[filePath].includes(method.toUpperCase())) {
+    return responseUtils.methodNotAllowed(response);
   }
 };
 
