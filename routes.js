@@ -106,6 +106,29 @@ const handleRequest = async (request, response) => {
     }
   }
 
+  // Find one user with an email "email@email.com"
+  const emailUser = await User.findOne({ email: "email@email.com" }).exec();
+
+  // Find a user by userId
+  const idUser = await User.findById(userId).exec();
+
+  // Checking user's password by using the checkPassword() method that was implemented in 9.5
+  const password = "$up3r$ecre+";
+  const user = await User.findById(userId).exec();
+  const isPasswordCorrect = await user.checkPassword(password);
+
+  isPasswordCorrect ? console.log("password correct") : console.log("password NOT correct");
+
+  // Update an existing user
+  const existingUser = User.findById(userId).exec();
+
+  // Change user's name and save changes
+  existingUser.name = "My New Name";
+  await existingUser.save();
+
+  // Delete an existing user
+  User.deleteOne({ _id: userId });
+
   if (filePath === '/api/products' && method.toUpperCase() === 'GET') {
     const userCredentials = getCredentials(request);
     if (!userCredentials) {
