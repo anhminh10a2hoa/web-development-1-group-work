@@ -126,14 +126,10 @@ const handleRequest = async (request, response) => {
     }
 
     // Update an existing user
-    const existingUser = await User.findById(userId).exec();
-
-    // Change user's name and save changes
-    existingUser.name = "My New Name";
-    await existingUser.save();
+    const existingUser = await User.findById(User).exec();
 
     // Delete an existing user
-    await User.deleteOne({ _id: userId });
+    await User.deleteOne({ _id: User });
 
     if (filePath === '/api/products' && method.toUpperCase() === 'GET') {
         const userCredentials = getCredentials(request);
