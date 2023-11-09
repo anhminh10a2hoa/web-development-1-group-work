@@ -2,7 +2,7 @@ const responseUtils = require('./utils/responseUtils');
 const { acceptsJson, isJson, parseBodyJson, getCredentials } = require('./utils/requestUtils');
 const { renderPublic } = require('./utils/render');
 // Import the User model from models/user.js
-const User = require('./models/user');
+const { User } = require('./models/user');
 
 /**
  * Known API routes and their allowed methods
@@ -124,9 +124,6 @@ const handleRequest = async (request, response) => {
             return responseUtils.serverError(response, 'Error creating user');
         }
     }
-
-    // Delete an existing user
-    await User.deleteOne({ _id: User });
 
     if (filePath === '/api/products' && method.toUpperCase() === 'GET') {
         const userCredentials = getCredentials(request);
