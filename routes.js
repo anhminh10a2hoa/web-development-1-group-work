@@ -55,7 +55,7 @@ const handleRequest = async (request, response) => {
     }
 
     // Check for allowable methods
-    if (filePath in allowedMethods && !allowedMethods[filePath].includes(method.toUpperCase())) {
+    if (!(filePath in allowedMethods) || !allowedMethods[filePath].includes(method.toUpperCase())) {
         return responseUtils.methodNotAllowed(response);
     }
 
@@ -91,21 +91,20 @@ const handleRequest = async (request, response) => {
         }
 
         // Parse the JSON body
-        const newUser = await parseBodyJson(request);
+        let newUser;
+        try {
+            newUser = await parseBodyJson(request);
 
-        // Validate the new user
-        // Validate the new user
-        if (!(newUser.name && newUser.email && newUser.password)) {
-            return responseUtils.badRequest(response, 'Missing required user data');
-        }
+            // Validate the new user
+            if (!newUser || !(newUser.name && newUser.email && newUser.password)) {
+                throw new Error('Invalid or missing user data');
+            }
 
-        // Set a default role if missing
-        newUser.role = newUser.role || 'customer';
-
-        // Check if the email is already in use
-        const existingUser = await User.findOne({ email: newUser.email });
-        if (existingUser) {
-            return responseUtils.badRequest(response, 'Email is already in use');
+            // Set a default role if missing
+            newUser.role = newUser.role || 'customer';
+        } catch (error) {
+            // Handle JSON parse error
+            return responseUtils.badRequest(response, error.message || 'Invalid JSON in the request body');
         }
 
         // Create a new user using the User model
@@ -114,8 +113,13 @@ const handleRequest = async (request, response) => {
         try {
             // Save the new user to the database
             await createdUser.save();
+            
             // Respond with '201 Created' and the created user details
-            return responseUtils.createdResource(response, createdUser);
+            responseUtils.createdResource(response, createdUser);
+
+            // Set user role to "customer"
+            createdUser.role = 'customer';
+            await createdUser.save();
         } catch (error) {
             return responseUtils.serverError(response, 'Error creating user');
         }
@@ -125,6 +129,7 @@ const handleRequest = async (request, response) => {
     const emailUser = await User.findOne({ email: "email@email.com" }).exec();
 
     // Find a user by userId
+    const userId = "put_user_id_here"; // Replace with an actual user ID
     const idUser = await User.findById(userId).exec();
 
     // Checking user's password by using the checkPassword() method that was implemented in 9.5
@@ -135,14 +140,14 @@ const handleRequest = async (request, response) => {
     isPasswordCorrect ? console.log("password correct") : console.log("password NOT correct");
 
     // Update an existing user
-    const existingUser = User.findById(userId).exec();
+    const existingUser = await User.findById(userId).exec();
 
     // Change user's name and save changes
     existingUser.name = "My New Name";
     await existingUser.save();
 
     // Delete an existing user
-    User.deleteOne({ _id: userId });
+    await User.deleteOne({ _id: userId });
 
     if (filePath === '/api/products' && method.toUpperCase() === 'GET') {
         const userCredentials = getCredentials(request);
