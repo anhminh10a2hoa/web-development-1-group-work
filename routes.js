@@ -11,9 +11,9 @@ const { User } = require('./models/user');
  * in response to an OPTIONS request by sendOptions() (Access-Control-Allow-Methods)
  */
 const allowedMethods = {
-  '/api/register': ['POST'],
-  '/api/users': ['GET'],
-  '/api/products': ['GET'],
+    '/api/register': ['POST'],
+    '/api/users': ['GET'],
+    '/api/products': ['GET'],
 };
 
 /**
@@ -23,135 +23,150 @@ const allowedMethods = {
  * @param {http.ServerResponse} response
  */
 const sendOptions = (filePath, response) => {
-  if (filePath in allowedMethods) {
-    response.writeHead(204, {
-      'Access-Control-Allow-Methods': allowedMethods[filePath].join(','),
-      'Access-Control-Allow-Headers': 'Content-Type,Accept',
-      'Access-Control-Max-Age': '86400',
-      'Access-Control-Expose-Headers': 'Content-Type,Accept',
-    });
-    return response.end();
-  }
+    if (filePath in allowedMethods) {
+        response.writeHead(204, {
+            'Access-Control-Allow-Methods': allowedMethods[filePath].join(','),
+            'Access-Control-Allow-Headers': 'Content-Type,Accept',
+            'Access-Control-Max-Age': '86400',
+            'Access-Control-Expose-Headers': 'Content-Type,Accept',
+        });
+        return response.end();
+    }
 
-  return responseUtils.notFound(response);
+    return responseUtils.notFound(response);
 };
 
 // eslint-disable-next-line max-lines-per-function, complexity
 const handleRequest = async (request, response) => {
-  const { url, method, headers } = request;
-  const filePath = new URL(url, `http://${headers.host}`).pathname;
+    const { url, method, headers } = request;
+    const filePath = new URL(url, `http://${headers.host}`).pathname;
 
-  // Serve static files from public/ and return immediately
-  if (method.toUpperCase() === 'GET' && !filePath.startsWith('/api')) {
-    const fileName = filePath === '/' || filePath === '' ? 'index.html' : filePath;
-    return renderPublic(fileName, response);
-  }
-
-  if (method.toUpperCase() === 'OPTIONS') return sendOptions(filePath, response);
-
-  // Require a correct accept header (require 'application/json' or '*/*')
-  if (!acceptsJson(request)) {
-    return responseUtils.contentTypeNotAcceptable(response);
-  }
-
-  // GET all users
-  if (filePath === '/api/users' && method.toUpperCase() === 'GET') {
-    const userCredentials = getCredentials(request);
-    if (!userCredentials) {
-      return responseUtils.basicAuthChallenge(response);
+    // Serve static files from public/ and return immediately
+    if (method.toUpperCase() === 'GET' && !filePath.startsWith('/api')) {
+        const fileName = filePath === '/' || filePath === '' ? 'index.html' : filePath;
+        return renderPublic(fileName, response);
     }
 
-    const loggedInUser = await User.findOne({ email: userCredentials[0] });
-    if (!loggedInUser || !(await loggedInUser.checkPassword(userCredentials[1]))) {
-      return responseUtils.basicAuthChallenge(response);
-    } else if (loggedInUser.role === 'customer') {
-      return responseUtils.forbidden(response);
+    if (method.toUpperCase() === 'OPTIONS') return sendOptions(filePath, response);
+
+    // Require a correct accept header (require 'application/json' or '*/*')
+    if (!acceptsJson(request)) {
+        return responseUtils.contentTypeNotAcceptable(response);
     }
 
-    // Use the User model to get all users
-    const users = await User.find();
-    return responseUtils.sendJson(response, users);
-  }
-
-  // Register a new user
-  if (filePath === '/api/register' && method.toUpperCase() === 'POST') {
-    // Fail if not a JSON request, don't allow non-JSON Content-Type
-    if (!isJson(request)) {
-      return responseUtils.badRequest(response, 'Invalid Content-Type. Expected application/json');
+    // Check for allowable methods
+    if (filePath in allowedMethods && !allowedMethods[filePath].includes(method.toUpperCase())) {
+        return responseUtils.methodNotAllowed(response);
     }
 
-    // Parse the JSON body
-    const newUser = await parseBodyJson(request);
-
-    // Validate the new user
-    if (!(newUser.name && newUser.email && newUser.password && newUser.role)) {
-      return responseUtils.badRequest(response, 'Missing user data');
+    // Handle unknown routes with a 404 response
+    if (!(filePath in allowedMethods)) {
+        return responseUtils.notFound(response);
     }
 
-    // Check if the email is already in use
-    const existingUser = await User.findOne({ email: newUser.email });
-    if (existingUser) {
-      return responseUtils.badRequest(response, 'Email is already in use');
+    // GET all users
+    if (filePath === '/api/users' && method.toUpperCase() === 'GET') {
+        const userCredentials = getCredentials(request);
+        if (!userCredentials) {
+            return responseUtils.basicAuthChallenge(response);
+        }
+
+        const loggedInUser = await User.findOne({ email: userCredentials[0] });
+        if (!loggedInUser || !(await loggedInUser.checkPassword(userCredentials[1]))) {
+            return responseUtils.basicAuthChallenge(response);
+        } else if (loggedInUser.role === 'customer') {
+            return responseUtils.forbidden(response);
+        }
+
+        // Use the User model to get all users
+        const users = await User.find();
+        return responseUtils.sendJson(response, users);
     }
 
-    // Create a new user using the User model
-    const createdUser = new User(newUser);
+    // Register a new user
+    if (filePath === '/api/register' && method.toUpperCase() === 'POST') {
+        // Fail if not a JSON request, don't allow non-JSON Content-Type
+        if (!isJson(request)) {
+            return responseUtils.badRequest(response, 'Invalid Content-Type. Expected application/json');
+        }
 
-    try {
-      // Save the new user to the database
-      await createdUser.save();
-      return responseUtils.createdResource(response, createdUser);
-    } catch (error) {
-      return responseUtils.serverError(response, 'Error creating user');
-    }
-  }
+        // Parse the JSON body
+        const newUser = await parseBodyJson(request);
 
-  // Find one user with an email "email@email.com"
-  const emailUser = await User.findOne({ email: "email@email.com" }).exec();
+        // Validate the new user
+        // Validate the new user
+        if (!(newUser.name && newUser.email && newUser.password)) {
+            return responseUtils.badRequest(response, 'Missing required user data');
+        }
 
-  // Find a user by userId
-  const idUser = await User.findById(userId).exec();
+        // Set a default role if missing
+        newUser.role = newUser.role || 'customer';
 
-  // Checking user's password by using the checkPassword() method that was implemented in 9.5
-  const password = "$up3r$ecre+";
-  const user = await User.findById(userId).exec();
-  const isPasswordCorrect = await user.checkPassword(password);
+        // Check if the email is already in use
+        const existingUser = await User.findOne({ email: newUser.email });
+        if (existingUser) {
+            return responseUtils.badRequest(response, 'Email is already in use');
+        }
 
-  isPasswordCorrect ? console.log("password correct") : console.log("password NOT correct");
+        // Create a new user using the User model
+        const createdUser = new User(newUser);
 
-  // Update an existing user
-  const existingUser = User.findById(userId).exec();
-
-  // Change user's name and save changes
-  existingUser.name = "My New Name";
-  await existingUser.save();
-
-  // Delete an existing user
-  User.deleteOne({ _id: userId });
-
-  if (filePath === '/api/products' && method.toUpperCase() === 'GET') {
-    const userCredentials = getCredentials(request);
-    if (!userCredentials) {
-      return responseUtils.basicAuthChallenge(response);
+        try {
+            // Save the new user to the database
+            await createdUser.save();
+            // Respond with '201 Created' and the created user details
+            return responseUtils.createdResource(response, createdUser);
+        } catch (error) {
+            return responseUtils.serverError(response, 'Error creating user');
+        }
     }
 
-    const loggedInUser = await User.findOne({ email: userCredentials[0] });
-    if (!loggedInUser || !(await loggedInUser.checkPassword(userCredentials[1]))) {
-      return responseUtils.basicAuthChallenge(response);
+    // Find one user with an email "email@email.com"
+    const emailUser = await User.findOne({ email: "email@email.com" }).exec();
+
+    // Find a user by userId
+    const idUser = await User.findById(userId).exec();
+
+    // Checking user's password by using the checkPassword() method that was implemented in 9.5
+    const password = "$up3r$ecre+";
+    const user = await User.findById(userId).exec();
+    const isPasswordCorrect = await user.checkPassword(password);
+
+    isPasswordCorrect ? console.log("password correct") : console.log("password NOT correct");
+
+    // Update an existing user
+    const existingUser = User.findById(userId).exec();
+
+    // Change user's name and save changes
+    existingUser.name = "My New Name";
+    await existingUser.save();
+
+    // Delete an existing user
+    User.deleteOne({ _id: userId });
+
+    if (filePath === '/api/products' && method.toUpperCase() === 'GET') {
+        const userCredentials = getCredentials(request);
+        if (!userCredentials) {
+            return responseUtils.basicAuthChallenge(response);
+        }
+
+        const loggedInUser = await User.findOne({ email: userCredentials[0] });
+        if (!loggedInUser || !(await loggedInUser.checkPassword(userCredentials[1]))) {
+            return responseUtils.basicAuthChallenge(response);
+        }
+
+        // Use the appropriate logic to get all products (you might have your own implementation)
+        const products = await getAllProducts();
+        return responseUtils.sendJson(response, products);
     }
 
-    // Use the appropriate logic to get all products (you might have your own implementation)
-    const products = await getAllProducts();
-    return responseUtils.sendJson(response, products);
-  }
+    // Default to 404 Not Found if unknown URL
+    if (!(filePath in allowedMethods)) return responseUtils.notFound(response);
 
-  // Default to 404 Not Found if unknown URL
-  if (!(filePath in allowedMethods)) return responseUtils.notFound(response);
-
-  // Check for allowable methods
-  if (!allowedMethods[filePath].includes(method.toUpperCase())) {
-    return responseUtils.methodNotAllowed(response);
-  }
+    // Check for allowable methods
+    if (!allowedMethods[filePath].includes(method.toUpperCase())) {
+        return responseUtils.methodNotAllowed(response);
+    }
 };
 
 module.exports = { handleRequest };

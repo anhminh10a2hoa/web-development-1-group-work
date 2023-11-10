@@ -9,34 +9,21 @@ const { User } = require('../models/user');
  * @returns {Object|null} current authenticated user or null if not yet authenticated
  */
 const getCurrentUser = async (request) => {
-  const credentials = getCredentials(request);
+    const credentials = getCredentials(request);
 
-  if (!credentials) {
-    return null; // No credentials provided
-  }
+    if (!credentials) {
+        return null; // No credentials provided
+    }
 
-  const [username, password] = credentials;
-
-  try {
     // Use the User model's findOne method to find a user with the given email
-    const user = await User.findOne({ email: username });
+    const user = User.findOne({ email: credentials.email });
 
-    if (!user) {
-      return null; // No user with the provided email
+    if (!user || !user.checkPassword(credentials.password)) {
+        return null;
     }
 
-    // Use the User model's checkPassword method to verify the password
-    const isPasswordValid = await user.checkPassword(password);
+    return user;
 
-    if (isPasswordValid) {
-      return user; // User authenticated
-    } else {
-      return null; // Password does not match
-    }
-  } catch (error) {
-    console.error(error);
-    return null; // An error occurred
-  }
 };
 
 module.exports = { getCurrentUser };
