@@ -5,13 +5,13 @@ const User = require('../../models/user');
 
 // helper function for creating randomized test data
 const generateRandomString = (len = 9) => {
-  let str;
+  let str = '';
 
   do {
-    str = Math.random().toString(36).substr(2, len).trim();
-  } while (str.length !== len);
+    str += Math.random().toString(36).substr(2, 9).trim();
+  } while (str.length < len);
 
-  return str;
+  return str.substr(0, len);
 };
 
 const createTestString = (strLength = 9, character = 'a') => {

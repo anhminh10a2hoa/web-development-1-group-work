@@ -10,7 +10,7 @@ const encodeCredentials = (username, password) =>
 const getRequest = headers => createRequest({ headers });
 
 // Get users (create copies for test isolation)
-const users = require('../../users.json').map(user => ({ ...user }));
+const users = require('../../setup/users.json').map(user => ({ ...user }));
 const adminUser = { ...users.find(u => u.role === 'admin') };
 const adminCredentials = encodeCredentials(adminUser.email, adminUser.password);
 
