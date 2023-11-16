@@ -1,11 +1,8 @@
 require('dotenv').config();
 const http = require('http');
-const { handleRequest } = require('./routes');
-
 const { connectDB } = require('./models/db');
-
+const { handleRequest } = require('./routes');
 const PORT = process.env.PORT || 3000;
-const dbAddress = process.env.DBURL;
 const server = http.createServer(handleRequest);
 
 server.on('error', err => {
@@ -16,6 +13,7 @@ server.on('error', err => {
 server.on('close', () => console.log('Server closed.'));
 
 connectDB();
+require('./setup/reset-db.js');
 
 server.listen(PORT, () => {
   console.log(`Listening on port: ${PORT}`);

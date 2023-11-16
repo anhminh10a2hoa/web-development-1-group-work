@@ -3,17 +3,20 @@ const http = require('http');
 const chai = require('chai');
 const expect = chai.expect;
 const chaiHttp = require('chai-http');
-const { handleRequest } = require('../routes');
+const { handleRequest } = require('../../routes');
 chai.use(chaiHttp);
 
-const User = require('../models/user');
+const User = require('../../models/user');
 
 // helper function for creating randomized test data
 const generateRandomString = (len = 9) => {
   let str = '';
 
   do {
-    str += Math.random().toString(36).substr(2, 9).trim();
+    str += Math.random()
+      .toString(36)
+      .substr(2, 9)
+      .trim();
   } while (str.length < len);
 
   return str.substr(0, len);
@@ -22,7 +25,7 @@ const generateRandomString = (len = 9) => {
 const shortWaitTime = 200;
 
 // Get users (create copies for test isolation)
-const users = require('../setup/users.json').map(user => ({ ...user }));
+const users = require('../../setup/users.json').map(user => ({ ...user }));
 
 const adminUser = { ...users.find(u => u.role === 'admin') };
 const customerUser = { ...users.find(u => u.role === 'customer') };
@@ -31,7 +34,7 @@ const notificationSelector = '#notifications-container';
 const rowSelector = '.item-row';
 
 // Get products
-const products = require('../products.json').map(product => ({ ...product }));
+const products = require('../../products.json').map(product => ({ ...product }));
 
 describe('User Inteface', () => {
   let allUsers;
@@ -61,7 +64,12 @@ describe('User Inteface', () => {
     });
     browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage'
+      ]
     });
     page = await browser.newPage();
 
@@ -80,7 +88,10 @@ describe('User Inteface', () => {
     await User.deleteMany({});
     await User.create(users);
     allUsers = await User.find({});
-    await page.authenticate({ username: adminUser.email, password: adminUser.password });
+    await page.authenticate({
+      username: adminUser.email,
+      password: adminUser.password
+    });
   });
 
   describe('UI: List all users', () => {
@@ -101,9 +112,15 @@ describe('User Inteface', () => {
 
       for (const user of allUsers) {
         const { id, name, email, role, password } = user;
-        const nameText = await page.$eval(`#name-${id}`, elem => elem.textContent.trim());
-        const emailText = await page.$eval(`#email-${id}`, elem => elem.textContent.trim());
-        const roleText = await page.$eval(`#role-${id}`, elem => elem.textContent.trim());
+        const nameText = await page.$eval(`#name-${id}`, elem =>
+          elem.textContent.trim()
+        );
+        const emailText = await page.$eval(`#email-${id}`, elem =>
+          elem.textContent.trim()
+        );
+        const roleText = await page.$eval(`#role-${id}`, elem =>
+          elem.textContent.trim()
+        );
         expect({
           _id: id,
           name: nameText,
@@ -134,17 +151,23 @@ describe('User Inteface', () => {
       await page.type('#name', newCustomer.name, { delay: 20 });
       await page.type('#email', newCustomer.email, { delay: 20 });
       await page.type('#password', newCustomer.password, { delay: 20 });
-      await page.type('#passwordConfirmation', newCustomer.password, { delay: 20 });
+      await page.type('#passwordConfirmation', newCustomer.password, {
+        delay: 20
+      });
       await page.click('#btnRegister');
       await page.waitForTimeout(shortWaitTime);
 
       // navigate to "/users.html" and check to see if the new user can be found
       await page.goto(usersPage, { waitUntil: 'networkidle0' });
-      const nameElement = await page.$x(`//h3[contains(., '${newCustomer.name}')]`);
+      const nameElement = await page.$x(
+        `//h3[contains(., '${newCustomer.name}')]`
+      );
       let nameText = '';
 
       try {
-        nameText = await (await nameElement[0].getProperty('textContent')).jsonValue();
+        nameText = await (
+          await nameElement[0].getProperty('textContent')
+        ).jsonValue();
       } catch (error) {}
 
       expect(nameText.trim()).to.equal(newCustomer.name.trim(), errorMsg);
@@ -173,9 +196,15 @@ describe('User Inteface', () => {
 
       const { id, name, email, role } = customer;
       const idText = await page.$eval('#id-input', elem => elem.value.trim());
-      const nameText = await page.$eval('#name-input', elem => elem.value.trim());
-      const emailText = await page.$eval('#email-input', elem => elem.value.trim());
-      const roleText = await page.$eval('#role-input', elem => elem.value.trim());
+      const nameText = await page.$eval('#name-input', elem =>
+        elem.value.trim()
+      );
+      const emailText = await page.$eval('#email-input', elem =>
+        elem.value.trim()
+      );
+      const roleText = await page.$eval('#role-input', elem =>
+        elem.value.trim()
+      );
 
       errorMsg =
         'Tried to get text content from modify user ' +
@@ -183,10 +212,12 @@ describe('User Inteface', () => {
         'Make sure that all the necessary ids are present ' +
         'and that the modify user form appears when "Modify" button is pressed';
 
-      expect({ _id: idText, name: nameText, email: emailText, role: roleText }).to.include(
-        { _id: id, name, email, role },
-        errorMsg
-      );
+      expect({
+        _id: idText,
+        name: nameText,
+        email: emailText,
+        role: roleText
+      }).to.include({ _id: id, name, email, role }, errorMsg);
     });
 
     it('should correctly modify user role', async () => {
@@ -223,7 +254,9 @@ describe('User Inteface', () => {
 
       expect(notificationText).to.equal(expectedNotification, errorMsg);
 
-      const roleText = await page.$eval(`#role-${customer.id}`, elem => elem.textContent.trim());
+      const roleText = await page.$eval(`#role-${customer.id}`, elem =>
+        elem.textContent.trim()
+      );
 
       errorMsg =
         'Tried change customer role to admin. ' +
@@ -306,11 +339,15 @@ describe('User Inteface', () => {
 
       for (const product of products) {
         const { _id: id, name, description, price } = product;
-        const nameText = await page.$eval(`#name-${id}`, elem => elem.textContent.trim());
+        const nameText = await page.$eval(`#name-${id}`, elem =>
+          elem.textContent.trim()
+        );
         const descriptionText = await page.$eval(`#description-${id}`, elem =>
           elem.textContent.trim()
         );
-        const priceText = await page.$eval(`#price-${id}`, elem => elem.textContent.trim());
+        const priceText = await page.$eval(`#price-${id}`, elem =>
+          elem.textContent.trim()
+        );
         expect({
           _id: id,
           name: nameText,
@@ -366,8 +403,12 @@ describe('User Inteface', () => {
       await page.goto(cartPage, { waitUntil: 'networkidle0' });
       await page.waitForTimeout(shortWaitTime);
 
-      const nameText = await page.$eval(`#name-${product._id}`, elem => elem.textContent.trim());
-      const priceText = await page.$eval(`#price-${product._id}`, elem => elem.textContent.trim());
+      const nameText = await page.$eval(`#name-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
+      const priceText = await page.$eval(`#price-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
       const amountText = await page.$eval(`#amount-${product._id}`, elem =>
         elem.textContent.trim()
       );
@@ -382,7 +423,10 @@ describe('User Inteface', () => {
         name: nameText,
         price: priceText,
         amount: amountText
-      }).to.include({ name: product.name, price: product.price, amount: '1x' }, errorMsg);
+      }).to.include(
+        { name: product.name, price: product.price, amount: '1x' },
+        errorMsg
+      );
     });
 
     it('should increase the amount of items of a product in a shopping cart', async () => {
@@ -391,8 +435,12 @@ describe('User Inteface', () => {
       await page.waitForTimeout(shortWaitTime);
       const { _id, name, price } = products[0];
 
-      const nameText = await page.$eval(`#name-${product._id}`, elem => elem.textContent.trim());
-      const priceText = await page.$eval(`#price-${product._id}`, elem => elem.textContent.trim());
+      const nameText = await page.$eval(`#name-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
+      const priceText = await page.$eval(`#price-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
       const amountText = await page.$eval(`#amount-${product._id}`, elem =>
         elem.textContent.trim()
       );
@@ -429,8 +477,12 @@ describe('User Inteface', () => {
       await page.waitForTimeout(shortWaitTime);
       const { _id, name, price } = products[0];
 
-      const nameText = await page.$eval(`#name-${product._id}`, elem => elem.textContent.trim());
-      const priceText = await page.$eval(`#price-${product._id}`, elem => elem.textContent.trim());
+      const nameText = await page.$eval(`#name-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
+      const priceText = await page.$eval(`#price-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
       const amountText = await page.$eval(`#amount-${product._id}`, elem =>
         elem.textContent.trim()
       );
@@ -467,8 +519,12 @@ describe('User Inteface', () => {
       await page.waitForTimeout(shortWaitTime);
       const { _id, name, price } = products[0];
 
-      const nameText = await page.$eval(`#name-${product._id}`, elem => elem.textContent.trim());
-      const priceText = await page.$eval(`#price-${product._id}`, elem => elem.textContent.trim());
+      const nameText = await page.$eval(`#name-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
+      const priceText = await page.$eval(`#price-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
       const amountText = await page.$eval(`#amount-${product._id}`, elem =>
         elem.textContent.trim()
       );
@@ -533,13 +589,20 @@ describe('User Inteface', () => {
         `Expected to receive a notification: "${expectedText}${expectedText}${expectedText}" ` +
         `but found this instead: "${notificationText}"`;
 
-      expect(notificationText).to.equal(expectedText + expectedText + expectedText, errorMsg);
+      expect(notificationText).to.equal(
+        expectedText + expectedText + expectedText,
+        errorMsg
+      );
 
       await page.goto(cartPage, { waitUntil: 'networkidle0' });
       await page.waitForTimeout(shortWaitTime);
 
-      const nameText = await page.$eval(`#name-${product._id}`, elem => elem.textContent.trim());
-      const priceText = await page.$eval(`#price-${product._id}`, elem => elem.textContent.trim());
+      const nameText = await page.$eval(`#name-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
+      const priceText = await page.$eval(`#price-${product._id}`, elem =>
+        elem.textContent.trim()
+      );
       const amountText = await page.$eval(`#amount-${product._id}`, elem =>
         elem.textContent.trim()
       );
@@ -554,7 +617,10 @@ describe('User Inteface', () => {
         name: nameText,
         price: priceText,
         amount: amountText
-      }).to.include({ name: product.name, price: product.price, amount: '3x' }, errorMsg);
+      }).to.include(
+        { name: product.name, price: product.price, amount: '3x' },
+        errorMsg
+      );
     });
 
     it('should place order from the shopping cart', async () => {
@@ -646,7 +712,9 @@ describe('User Inteface', () => {
       await page.click(addToCartSelector2);
       await page.waitForTimeout(shortWaitTime);
 
-      notificationText = await page.$eval(notificationSelector, elem => elem.textContent.trim());
+      notificationText = await page.$eval(notificationSelector, elem =>
+        elem.textContent.trim()
+      );
 
       errorMsg =
         'Navigated to "/products.html" ' +
@@ -654,14 +722,19 @@ describe('User Inteface', () => {
         `Expected to receive a notification: "${expectedText2}" ` +
         `but found this instead: "${notificationText}"`;
 
-      expect(notificationText).to.equal(expectedText1 + expectedText2 + expectedText2, errorMsg);
+      expect(notificationText).to.equal(
+        expectedText1 + expectedText2 + expectedText2,
+        errorMsg
+      );
 
       // Here start the cart page handling
       await page.goto(cartPage, { waitUntil: 'networkidle0' });
       await page.waitForTimeout(shortWaitTime);
       const { _id, name, price } = products[0];
 
-      const nameText1 = await page.$eval(`#name-${product1._id}`, elem => elem.textContent.trim());
+      const nameText1 = await page.$eval(`#name-${product1._id}`, elem =>
+        elem.textContent.trim()
+      );
       const priceText1 = await page.$eval(`#price-${product1._id}`, elem =>
         elem.textContent.trim()
       );
@@ -669,7 +742,9 @@ describe('User Inteface', () => {
         elem.textContent.trim()
       );
 
-      const nameText2 = await page.$eval(`#name-${product2._id}`, elem => elem.textContent.trim());
+      const nameText2 = await page.$eval(`#name-${product2._id}`, elem =>
+        elem.textContent.trim()
+      );
       const priceText2 = await page.$eval(`#price-${product2._id}`, elem =>
         elem.textContent.trim()
       );

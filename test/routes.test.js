@@ -1,7 +1,7 @@
 const chai = require('chai');
 const expect = chai.expect;
 const chaiHttp = require('chai-http');
-const { handleRequest } = require('../routes');
+const { handleRequest } = require('../../routes');
 
 const registrationUrl = '/api/register';
 const usersUrl = '/api/users';
@@ -9,7 +9,7 @@ const productsUrl = '/api/products';
 const contentType = 'application/json';
 chai.use(chaiHttp);
 
-const User = require('../models/user');
+const User = require('../../models/user');
 
 // helper function for authorization headers
 const encodeCredentials = (username, password) =>
@@ -20,26 +20,38 @@ const generateRandomString = (len = 9) => {
   let str = '';
 
   do {
-    str += Math.random().toString(36).substr(2, 9).trim();
+    str += Math.random()
+      .toString(36)
+      .substr(2, 9)
+      .trim();
   } while (str.length < len);
 
   return str.substr(0, len);
 };
 
 // Get products (create copies for test isolation)
-const products = require('../products.json').map(product => ({ ...product }));
+const products = require('../../products.json').map(product => ({ ...product }));
 
 // Get users (create copies for test isolation)
-const users = require('../setup/users.json').map(user => ({ ...user }));
+const users = require('../../setup/users.json').map(user => ({ ...user }));
 
 const adminUser = { ...users.find(u => u.role === 'admin') };
 const customerUser = { ...users.find(u => u.role === 'customer') };
 
 const adminCredentials = encodeCredentials(adminUser.email, adminUser.password);
-const customerCredentials = encodeCredentials(customerUser.email, customerUser.password);
-const invalidCredentials = encodeCredentials(adminUser.email, customerUser.password);
+const customerCredentials = encodeCredentials(
+  customerUser.email,
+  customerUser.password
+);
+const invalidCredentials = encodeCredentials(
+  adminUser.email,
+  customerUser.password
+);
 
-const unknownUrls = [`/${generateRandomString(20)}.html`, `/api/${generateRandomString(20)}`];
+const unknownUrls = [
+  `/${generateRandomString(20)}.html`,
+  `/api/${generateRandomString(20)}`
+];
 
 describe('Routes', () => {
   let allUsers;
@@ -95,20 +107,29 @@ describe('Routes', () => {
         expect(response).to.have.header('access-control-allow-methods', /get/i);
 
         // Access-Control-Allow-Headers: Content-Type,Accept
-        expect(response).to.have.header('access-control-allow-headers', /content-type,accept/i);
+        expect(response).to.have.header(
+          'access-control-allow-headers',
+          /content-type,accept/i
+        );
 
         // Access-Control-Max-Age: 86400
         expect(response).to.have.header('access-control-max-age', '86400');
 
         // Access-Control-Expose-Headers: Content-Type,Accept
-        expect(response).to.have.header('access-control-expose-headers', /content-type,accept/i);
+        expect(response).to.have.header(
+          'access-control-expose-headers',
+          /content-type,accept/i
+        );
       });
     });
 
     describe('Registration: POST /api/register', () => {
       it('should respond with "406 Not Acceptable" when Accept header is missing', async () => {
         const user = getTestUser();
-        const response = await chai.request(handleRequest).post(registrationUrl).send(user);
+        const response = await chai
+          .request(handleRequest)
+          .post(registrationUrl)
+          .send(user);
         expect(response).to.have.status(406);
       });
 
@@ -211,8 +232,20 @@ describe('Routes', () => {
         expect(response).to.have.status(201);
         expect(response).to.be.json;
         expect(response.body).to.be.an('object');
-        expect(response.body).to.have.all.keys('_id', 'name', 'email', 'password', 'role');
-        expect(response.body).to.include({ _id: id, name, email, role, password });
+        expect(response.body).to.have.all.keys(
+          '_id',
+          'name',
+          'email',
+          'password',
+          'role'
+        );
+        expect(response.body).to.include({
+          _id: id,
+          name,
+          email,
+          role,
+          password
+        });
       });
 
       it('should set user role to "customer" when registration is successful', async () => {
@@ -230,7 +263,13 @@ describe('Routes', () => {
         expect(response).to.have.status(201);
         expect(response).to.be.json;
         expect(response.body).to.be.an('object');
-        expect(response.body).to.have.all.keys('_id', 'name', 'email', 'password', 'role');
+        expect(response.body).to.have.all.keys(
+          '_id',
+          'name',
+          'email',
+          'password',
+          'role'
+        );
         expect(response.body.role).to.equal('customer');
         expect(createdUser.role).to.equal('customer');
       });
@@ -243,19 +282,28 @@ describe('Routes', () => {
       });
 
       it('should respond with "406 Not Acceptable" when client does not accept JSON', async () => {
-        const response = await chai.request(handleRequest).get(usersUrl).set('Accept', 'text/html');
+        const response = await chai
+          .request(handleRequest)
+          .get(usersUrl)
+          .set('Accept', 'text/html');
 
         expect(response).to.have.status(406);
       });
 
       it('should respond with "401 Unauthorized" when Authorization header is missing', async () => {
-        const response = await chai.request(handleRequest).get(usersUrl).set('Accept', contentType);
+        const response = await chai
+          .request(handleRequest)
+          .get(usersUrl)
+          .set('Accept', contentType);
 
         expect(response).to.have.status(401);
       });
 
       it('should respond with Basic Auth Challenge when Authorization header is missing', async () => {
-        const response = await chai.request(handleRequest).get(usersUrl).set('Accept', contentType);
+        const response = await chai
+          .request(handleRequest)
+          .get(usersUrl)
+          .set('Accept', contentType);
 
         expect(response).to.have.status(401);
         expect(response).to.have.header('www-authenticate', /basic/i);
@@ -277,7 +325,10 @@ describe('Routes', () => {
           .request(handleRequest)
           .get(usersUrl)
           .set('Accept', contentType)
-          .set('Authorization', `Basic ${adminUser.email}:${adminUser.password}`);
+          .set(
+            'Authorization',
+            `Basic ${adminUser.email}:${adminUser.password}`
+          );
 
         expect(response).to.have.status(401);
         expect(response).to.have.header('www-authenticate', /basic/i);
@@ -322,19 +373,27 @@ describe('Routes', () => {
       let url;
 
       beforeEach(async () => {
-        const tempUser = users.find(u => u.role === 'admin' && u.email !== adminUser.email);
+        const tempUser = users.find(
+          u => u.role === 'admin' && u.email !== adminUser.email
+        );
         testUser = await User.findOne({ email: tempUser.email }).exec();
         url = `${usersUrl}/${testUser.id}`;
       });
 
       it('should respond with "401 Unauthorized" when Authorization header is missing', async () => {
-        const response = await chai.request(handleRequest).get(url).set('Accept', contentType);
+        const response = await chai
+          .request(handleRequest)
+          .get(url)
+          .set('Accept', contentType);
 
         expect(response).to.have.status(401);
       });
 
       it('should respond with Basic Auth Challenge when Authorization header is missing', async () => {
-        const response = await chai.request(handleRequest).get(url).set('Accept', contentType);
+        const response = await chai
+          .request(handleRequest)
+          .get(url)
+          .set('Accept', contentType);
 
         expect(response).to.have.status(401);
         expect(response).to.have.header('www-authenticate', /basic/i);
@@ -371,7 +430,13 @@ describe('Routes', () => {
         expect(response).to.have.status(200);
         expect(response).to.be.json;
         expect(response.body).to.be.an('object');
-        expect(response.body).to.have.all.keys('_id', 'name', 'email', 'password', 'role');
+        expect(response.body).to.have.all.keys(
+          '_id',
+          'name',
+          'email',
+          'password',
+          'role'
+        );
       });
 
       it('should respond with status code 404 when user does not exist', async () => {
@@ -394,13 +459,18 @@ describe('Routes', () => {
       let url;
 
       beforeEach(async () => {
-        const tempUser = users.find(u => u.role === 'customer' && u.email !== customerUser.email);
+        const tempUser = users.find(
+          u => u.role === 'customer' && u.email !== customerUser.email
+        );
         testUser = await User.findOne({ email: tempUser.email }).exec();
         url = `${usersUrl}/${testUser.id}`;
       });
 
       it('should respond with "401 Unauthorized" when Authorization header is missing', async () => {
-        const response = await chai.request(handleRequest).put(url).set('Accept', contentType);
+        const response = await chai
+          .request(handleRequest)
+          .put(url)
+          .set('Accept', contentType);
 
         expect(response).to.have.status(401);
       });
@@ -445,7 +515,13 @@ describe('Routes', () => {
         expect(response).to.have.status(200);
         expect(response).to.be.json;
         expect(response.body).to.be.an('object');
-        expect(response.body).to.have.all.keys('_id', 'name', 'email', 'password', 'role');
+        expect(response.body).to.have.all.keys(
+          '_id',
+          'name',
+          'email',
+          'password',
+          'role'
+        );
         expect(response.body.role).to.equal('admin');
       });
 
@@ -466,7 +542,13 @@ describe('Routes', () => {
         expect(response).to.have.status(200);
         expect(response).to.be.json;
         expect(response.body).to.be.an('object');
-        expect(response.body).to.have.all.keys('_id', 'name', 'email', 'password', 'role');
+        expect(response.body).to.have.all.keys(
+          '_id',
+          'name',
+          'email',
+          'password',
+          'role'
+        );
         expect(response.body.email).to.equal(testUser.email);
         expect(response.body.name).to.equal(testUser.name);
         expect(response.body._id).to.equal(testUser.id);
@@ -523,13 +605,19 @@ describe('Routes', () => {
       });
 
       it('should respond with "401 Unauthorized" when Authorization header is missing', async () => {
-        const response = await chai.request(handleRequest).delete(url).set('Accept', contentType);
+        const response = await chai
+          .request(handleRequest)
+          .delete(url)
+          .set('Accept', contentType);
 
         expect(response).to.have.status(401);
       });
 
       it('should respond with Basic Auth Challenge when Authorization header is missing', async () => {
-        const response = await chai.request(handleRequest).delete(url).set('Accept', contentType);
+        const response = await chai
+          .request(handleRequest)
+          .delete(url)
+          .set('Accept', contentType);
 
         expect(response).to.have.status(401);
         expect(response).to.have.header('www-authenticate', /basic/i);
@@ -580,11 +668,20 @@ describe('Routes', () => {
         expect(response).to.be.json;
         expect(dbUsers).to.be.lengthOf(allUsers.length - 1);
         expect(response.body).to.be.an('object');
-        expect(response.body).to.have.all.keys('_id', 'name', 'email', 'password', 'role');
+        expect(response.body).to.have.all.keys(
+          '_id',
+          'name',
+          'email',
+          'password',
+          'role'
+        );
       });
 
       it('should respond with status code 404 when user does not exist', async () => {
-        const fakeId = testUser.id.split('').reverse().join('');
+        const fakeId = testUser.id
+          .split('')
+          .reverse()
+          .join('');
         const response = await chai
           .request(handleRequest)
           .delete(`${usersUrl}/${fakeId}`)

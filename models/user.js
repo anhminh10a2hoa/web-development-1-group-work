@@ -39,25 +39,28 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: true,
-    minlength: SCHEMA_DEFAULTS.password.minLength,
-    set: (password) => {
-      if (!password) return password;
-      if (password.length < SCHEMA_DEFAULTS.password.minLength) return password;
-      return bcrypt.hashSync(password, SALT_ROUNDS);
-    },
+    minLength: SCHEMA_DEFAULTS.password.minLength,
+    set: p => {
+      if (p.length < 10 || !p) {
+        return p;
+      }
+      return bcrypt.hashSync(p, SALT_ROUNDS);
+    }
   },
   role: {
     type: String,
     required: true,
-    trim: true,
     lowercase: true,
-    enum: SCHEMA_DEFAULTS.role.values,
+    trim: true,
     default: SCHEMA_DEFAULTS.role.defaultValue,
+    validate: (val) => {
+      return val === 'customer' || val === 'admin';
+    }
   },
 });
 
 userSchema.methods.checkPassword = async function (password) {
-  return bcrypt.compare(password, this.password);
+  return await bcrypt.compare(password, this.password);
 };
 
 userSchema.set('toJSON', { virtuals: false, versionKey: false });

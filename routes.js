@@ -1,8 +1,10 @@
 const responseUtils = require('./utils/responseUtils');
 const { acceptsJson, isJson, parseBodyJson, getCredentials } = require('./utils/requestUtils');
 const { renderPublic } = require('./utils/render');
-// Import the User model from models/user.js
-const { User } = require('./models/user');
+const { getCurrentUser } = require('./auth/auth');
+const { getAllUsers, registerUser, deleteUser, viewUser, updateUser } = require('./controllers/users');
+const { getAllProducts, getProduct, addNewProduct, updateProduct, deleteProduct } = require('./controllers/products');
+const User = require('./models/user') ;
 
 /**
  * Known API routes and their allowed methods
@@ -13,7 +15,8 @@ const { User } = require('./models/user');
 const allowedMethods = {
     '/api/register': ['POST'],
     '/api/users': ['GET'],
-    '/api/products': ['GET'],
+    '/api/products': ['GET', 'POST'],
+    '/api/orders': ['GET', 'POST']
 };
 
 /**
@@ -68,61 +71,28 @@ const handleRequest = async (request, response) => {
     if (filePath === '/api/users' && method.toUpperCase() === 'GET') {
         const userCredentials = getCredentials(request);
         if (!userCredentials) {
-            return responseUtils.basicAuthChallenge(response);
+          return responseUtils.basicAuthChallenge(response);
         }
-
-        const loggedInUser = await User.findOne({ email: userCredentials[0] });
-        if (!loggedInUser || !(await loggedInUser.checkPassword(userCredentials[1]))) {
-            return responseUtils.basicAuthChallenge(response);
-        } else if (loggedInUser.role === 'customer') {
-            return responseUtils.forbidden(response);
+        const loggedInUser = await getCurrentUser(request);
+        if (loggedInUser === null){
+          return responseUtils.basicAuthChallenge(response);
         }
-
-        // Use the User model to get all users
-        const users = await User.find();
-        return responseUtils.sendJson(response, users);
+        if (loggedInUser.role === 'customer'){
+          return responseUtils.forbidden(response);
+        }
+        return getAllUsers(response);
     }
 
     // Register a new user
     if (filePath === '/api/register' && method.toUpperCase() === 'POST') {
-        // Fail if not a JSON request, don't allow non-JSON Content-Type
-        if (!isJson(request)) {
-            return responseUtils.badRequest(response, 'Invalid Content-Type. Expected application/json');
-        }
-
-        // Parse the JSON body
-        let newUser;
-        try {
-            newUser = await parseBodyJson(request);
-
-            // Validate the new user
-            if (!newUser || !(newUser.name && newUser.email && newUser.password)) {
-                throw new Error('Invalid or missing user data');
-            }
-
-            // Set a default role if missing
-            newUser.role = newUser.role || 'customer';
-        } catch (error) {
-            // Handle JSON parse error
-            return responseUtils.badRequest(response, error.message || 'Invalid JSON in the request body');
-        }
-
-        // Create a new user using the User model
-        const createdUser = new User(newUser);
-
-        try {
-            // Save the new user to the database
-            await createdUser.save();
-            
-            // Respond with '201 Created' and the created user details
-            responseUtils.createdResource(response, createdUser);
-
-            // Set user role to "customer"
-            createdUser.role = 'customer';
-            await createdUser.save();
-        } catch (error) {
-            return responseUtils.serverError(response, 'Error creating user');
-        }
+      if (!request.headers.accept) {
+        return responseUtils.contentTypeNotAcceptable(response);
+      }
+      if (!isJson(request)) {
+        return responseUtils.badRequest(response, 'Invalid Content-Type. Expected application/json');
+      }
+      const newUser = await parseBodyJson(request);
+      return registerUser(response, newUser);
     }
 
     if (filePath === '/api/products' && method.toUpperCase() === 'GET') {
@@ -135,11 +105,29 @@ const handleRequest = async (request, response) => {
         if (!loggedInUser || !(await loggedInUser.checkPassword(userCredentials[1]))) {
             return responseUtils.basicAuthChallenge(response);
         }
-
-        // Use the appropriate logic to get all products (you might have your own implementation)
-        const products = await getAllProducts();
-        return responseUtils.sendJson(response, products);
+        return getAllProducts(response);
     }
+
+    if (filePath === '/api/products' && method.toUpperCase() === 'POST') {
+      const userCredentials = getCredentials(request);
+      if (!userCredentials) {
+          return responseUtils.basicAuthChallenge(response);
+      }
+
+      const loggedInUser = await User.findOne({ email: userCredentials[0] });
+      if (!loggedInUser || !(await loggedInUser.checkPassword(userCredentials[1]))) {
+          return responseUtils.basicAuthChallenge(response);
+      }
+      if(loggedInUser.role !== 'admin' ){
+          return responseUtils.forbidden(response);
+      }
+      if (!isJson(request)){
+          return responseUtils.badRequest(response);
+      }
+      
+      const newProduct = await parseBodyJson(request);
+      return addNewProduct(response, newProduct);
+  }
 
     // Default to 404 Not Found if unknown URL
     if (!(filePath in allowedMethods)) return responseUtils.notFound(response);

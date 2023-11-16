@@ -128,7 +128,6 @@ const createNotification = (message, containerId, isSuccess = true) => {
 
   // Add message test inside the paragraph and append the paragraph to the container
   newParagraph.append(document.createTextNode(message));
-  console.log(container)
   container.append(newParagraph);
 
   // After five seconds remove the notification
@@ -145,7 +144,6 @@ const createNotification = (message, containerId, isSuccess = true) => {
  */
 const removeElement = (containerId, elementId) => {
   const container = document.getElementById(containerId);
-  console.log(container)
   container.querySelectorAll(`#${elementId}`).forEach(element => element.remove());
 };
 

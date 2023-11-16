@@ -1,3 +1,4 @@
+const User = require("./models/user");
 /**
  * Week 08 utility file for user related operations
  *
@@ -28,24 +29,6 @@ const data = {
 const resetUsers = () => {
   // make copies of users (prevents changing from outside this module/file)
   data.users = require('../users.json').map(user => ({...user }));
-};
-
-/**
- * Generate a random string for use as user ID
- * @returns {string}
- */
-const generateId = () => {
-  let id;
-
-  do {
-    // Generate unique random id that is not already in use
-    // Shamelessly borrowed from a Gist. See:
-    // https://gist.github.com/gordonbrander/2230317
-
-    id = Math.random().toString(36).substr(2, 9);
-  } while (data.users.some(u => u._id === id));
-
-  return id;
 };
 
 /**
@@ -80,9 +63,9 @@ const getUser = (email, password) => {
  * @param {string} userId
  * @returns {Object|undefined}
  */
-const getUserById = userId => {
-  const userFound = data.users.find(user => user._id === userId);
-  return userFound && {...userFound };
+const getUserById = async (userId) => {
+  const idUser = await User.findById(userId).exec();
+  return idUser && {...idUser };
 };
 
 /**
@@ -92,13 +75,7 @@ const getUserById = userId => {
  * @returns {Object|undefined} deleted user or undefined if user does not exist
  */
 const deleteUserById = userId => {
-  const index = data.users.findIndex(user => user._id === userId);
-  if (index !== -1) {
-    const deletedUser = data.users.splice(index, 1)[0];
-    return {...deletedUser };
-  } else {
-    return undefined;
-  }
+  User.deleteOne({ _id: userId });
 };
 
 /**
@@ -109,7 +86,10 @@ const deleteUserById = userId => {
  *
  * @returns {Array<Object>} all users
  */
-const getAllUsers = () => data.users.map(user => ({...user }));
+const getAllUsers = async() => {
+  const users = await User.find({});
+  return users && {...users };
+};
 
 /**
  * Save new user
@@ -123,13 +103,9 @@ const getAllUsers = () => data.users.map(user => ({...user }));
  * @param {Object} user
  * @returns {Object} copy of the created user
  */
-const saveNewUser = user => {
-  // Use generateId() to assign a unique id to the newly created user.
-  const newUser = {...user };
-  newUser._id = generateId();
-  newUser.role = 'customer';
-  data.users.push(newUser);
-  return {...newUser };
+const saveNewUser = async(user) => {
+  const newUser = new User(user);
+  await newUser.save();
 };
 
 /**

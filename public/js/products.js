@@ -13,7 +13,6 @@ const addToCart = (productId, productName) => {
 
   // Get all the products using the getJSON function
   const products = await getJSON('/api/products');
-  console.log(products)
   // Loop through the products and populate the product list
   products.forEach(product => {
     // Clone the product template
@@ -21,7 +20,6 @@ const addToCart = (productId, productName) => {
 
     // Set the id attributes for the cloned elements
     const productId = product._id;
-    console.log(`name-${productId}`)
     productClone.querySelector(`h3`).id = `name-${productId}`;
     productClone.querySelector('.product-description').id = `description-${productId}`;
     productClone.querySelector('.product-price').id = `price-${productId}`;

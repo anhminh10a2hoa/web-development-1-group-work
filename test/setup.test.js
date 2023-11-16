@@ -9,8 +9,8 @@ const dbConfig = {
 /**
  * Run before all tests
  */
-const beforeAll = async() => {
-  const clearDb = async() => {
+const beforeAll = async () => {
+  const clearDb = async () => {
     for (const i in mongoose.connection.collections) {
       await mongoose.connection.collections[i].deleteMany({});
     }
@@ -21,7 +21,8 @@ const beforeAll = async() => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useFindAndModify: false,
-      useCreateIndex: true
+      useCreateIndex: true,
+      family: 4
     });
 
     mongoose.connection.on('error', err => {

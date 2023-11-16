@@ -1,3 +1,4 @@
+/* eslint-disable no-implicit-globals */
 const mongoose = require('mongoose');
 
 /**
@@ -31,7 +32,8 @@ function connectDB() {
         useUnifiedTopology: true,
         useFindAndModify: false,
         useCreateIndex: true,
-        autoIndex: true
+        autoIndex: true,
+        family: 4
       })
       .then(() => {
         mongoose.connection.on('error', err => {
