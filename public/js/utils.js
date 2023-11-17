@@ -32,7 +32,7 @@ const getJSON = async url => {
  *
  * @param {string} url resource url on the server
  * @param {string} method "PUT" or "POST"
- * @param {Object|Array} data payload data to be sent to the server as JSON
+ * @param {object|Array} data payload data to be sent to the server as JSON
  * @returns {Promise<*>} promise that resolves to the parsed JSON
  */
 const postOrPutJSON = async(url, method, data = {}) => {
@@ -69,20 +69,22 @@ const postOrPutJSON = async(url, method, data = {}) => {
  * @returns {Promise<*>} promise that resolves to the parsed JSON
  */
 const deleteResource = async url => {
+  // TODO: 8.6 Implement this
   const response = await fetch(url, {
     method: 'DELETE',
     credentials: 'same-origin',
-    headers: {
-      Accept: 'application/json',
-    }
+    headers: { 
+      'Content-Type': 'application/json',
+      Accept: 'application/json' }
   });
-
   if (!response.ok) throw new Error('Network response was not OK');
   if (response.status < 200 || response.status > 400) {
     throw new Error(`Received "${response.status} ${response.statusText}"`);
   }
-
   return await response.json();
+
+
+  //throw new Error('Not Implemented');
 };
 
 /**
@@ -90,7 +92,7 @@ const deleteResource = async url => {
  * or other HTML elements (remember that IDs must be unique within
  * a document).
  *
- * @returns {string}
+ * @returns {string} a random unique id
  */
 const generateId = () => {
   // Shamelessly borrowed from a Gist. See:
@@ -109,7 +111,7 @@ const generateId = () => {
  * Appends a new paragraph inside the container element and gives it
  * class based on the status of the message (success or failure).
  *
- * @param {string} message
+ * @param {string} message message that will be notified
  * @param {string} containerId id attribute of the container element
  * @param {boolean} isSuccess whether the message describes a success or a failure
  */
@@ -148,35 +150,60 @@ const removeElement = (containerId, elementId) => {
 };
 
 const addProductToCart = productId => {
-  const productCount = getProductCountFromCart(productId);
-  if (!productCount) {
-    // If productCount is undefined, set the product data with a count of 1
-    sessionStorage.setItem(productId, '1');
-  } else {
-    // If productCount is defined, increment the count by 1
-    const newCount = parseInt(productCount) + 1;
-    sessionStorage.setItem(productId, newCount.toString());
+  var count = getProductCountFromCart(productId);
+  // TODO 9.2
+  // Use sessionStorage's setItem('key', 'value')
+  // (https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage#basic_usage)
+  // to set the product data to the session storage
+  // if the productCount is undefined 
+  //    key: productId
+  //    data: 1
+  // but if productCount is defined
+  //    key: productId
+  //    data: productCount + 1
+  if (count === null){
+    count = 1;
   }
-
+  else {
+    count = Number(count) + 1;
+  }
+  sessionStorage.setItem(productId, count)
   return getProductCountFromCart(productId);
 };
 
 const decreaseProductCount = productId => {
-  const productCount = getProductCountFromCart(productId);
-
+  var productCount = getProductCountFromCart(productId);
   if (productCount > 1) {
-    // If product count is greater than 1, decrement the count by 1
-    const newCount = parseInt(productCount) - 1;
-    sessionStorage.setItem(productId, newCount.toString());
+    // TODO 9.2
+    // use sessionStorage's setItem('key', 'value')
+    // (https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage#basic_usage) to remove 1 from the product amount
+    // in the cart
+    //    key: productId
+    //    data: productCount - 1
+    const newCount = Number(productCount) - 1;
+    sessionStorage.setItem(productId, newCount);
     return newCount;
   } else {
-    // If product count is 1 or less, remove the item from sessionStorage
+    // TODO 9.2 
+    // use sessionStorage's removeItem('key') to remove 
+    // the item if its count/amount drops to zero 
+    // (https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage#basic_usage)
+    //    key: productId
     sessionStorage.removeItem(productId);
     return 0;
   }
 };
 
 const getProductCountFromCart = productId => {
+  // TODO 9.2
+  // use sessionStorage's getItem('key') to to fetch and
+  // return the storage item product's value/amount 
+  // from the session storage
+  // with the productId as the key 
+  // (https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage#basic_usage)
+  //    key: productId
+  // Return the fetched product amount (the fetched
+  //     value of the session storage item)
   return sessionStorage.getItem(productId);
 };
 
@@ -191,5 +218,11 @@ const getAllProductsFromCart = () => {
 };
 
 const clearCart = () => {
+  // TODO 9.2
+  // use sessionStorage's clear() to remove 
+  // items from the session storage
+  // (https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage#basic_usage)
+  //    key: productId
   sessionStorage.clear();
 };
+

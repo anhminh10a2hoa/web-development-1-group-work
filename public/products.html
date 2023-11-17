@@ -1,45 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="css/styles.css">
+    <title>Products</title>
+  </head>
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="css/styles.css">
-  <title>Products</title>
-</head>
-
-<body>
-  <header>
-    <nav class="navbar">
-      <ul class="nav-links">
-        <li><a href="index.html">Front Page</a></li>
-        <li><a href="register.html">Register</a></li>
-        <li><a href="users.html">List Users</a></li>
-        <li><a href="products.html">Products</a></li>
-        <li><a href="cart.html">Shopping Cart</a></li>
-        <li><a href="orders.html">Orders</a></li>
-      </ul>
-    </nav>
-  </header>
-  <main>
-    <h1>Products</h1>
-    <div id="notifications-container"></div>
-    <div id="products-container"></div>
-  </main>
-  <footer>
-    <p>Copyright &copy; 2023 diipadaa etc etc.</p>
-  </footer>
-  <template id="product-template">
-    <div class="item-row">
-      <h3 class="product-name"></h3>
-      <p class="product-description"></p>
-      <p class="product-price"></p>
-      <button class="add-to-cart">Add to cart</button>
-    </div>
-  </template>
-  <script src="js/utils.js"></script>
-  <script src="js/products.js"></script>
-</body>
-
+  <body>
+    <header>
+      <nav class="navbar">
+        <ul class="nav-links">
+          <li><a href="index.html">Front Page</a></li>
+          <li><a href="register.html">Register</a></li>
+          <li><a href="users.html">List Users</a></li>
+          <li><a href="products.html">List Products</a></li>
+          <li><a href="cart.html">Shopping Cart</a></li>
+          <li><a href="orders.html">Orders</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <h1>Products</h1>
+      <button id="add-product" hidden="true">Add new product</button>
+      <div id="notifications-container"></div>
+      <div id="modify-product"></div>
+      <div id="products-container"></div>
+    </main>
+    <footer>
+      <p>Copyright &copy; 2020 diipadaa etc etc.</p>
+    </footer>
+    <template id="product-template">
+      <div class="item-row">
+        <h3 class="product-name"></h3>
+        <p class="product-description"></p>
+        <p class="product-price"></p>
+        <button id="add-to-cart">Add to cart</button>
+        <button id="modify-product" hidden="true">Modify</button>
+        <button id="delete-product" hidden="true">Delete</button>
+      </div>
+    </template>
+    <template id="form-template">
+      <form id="edit-product-form" method="POST">
+        <h2 class="text-align-center">Modify product {Product Name}</h2>
+        <div class="form-group">
+          <label for="id">Id</label>
+          <input
+            name="_id"
+            type="text"
+            class="form-control"
+            id="id-input"
+            value=""
+            disabled
+            required>
+        </div>
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input
+            name="name"
+            type="text"
+            class="form-control"
+            id="name-input"
+            value=""            
+            required>
+        </div>
+        <div class="form-group">
+          <label for="price">Price</label>
+          <input
+            name="price"
+            type="text"
+            class="form-control"
+            id="price-input"
+            value=""            
+            required>
+        </div>
+        <div class="form-group">
+          <label for="description">Description</label>
+          <input
+            name="description"
+            type="text"
+            class="form-control"
+            id="description-input"
+            value=""            
+            required>
+        </div>        
+        <div class="form-group">
+          <div class="second-column">
+            <button type="submit" id="update-button">Update</button>
+          </div>
+        </div>
+      </form>
+    </template>
+    <script src="js/utils.js"></script>
+    <script src="js/products.js"></script>
+  </body>
 </html>

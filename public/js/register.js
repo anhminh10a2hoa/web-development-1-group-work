@@ -1,42 +1,36 @@
-// Function to handle registration form submission
-const handleRegistration = async (event) => {
-  event.preventDefault();
+/**
+ * TODO: 8.4 Register new user
+ *       - Handle registration form submission
+ *       - Prevent registration when password and passwordConfirmation do not match
+ *       - Use createNotification() function from utils.js to show user messages of
+ *       - error conditions and successful registration
+ *       - Reset the form back to empty after successful registration
+ *       - Use postOrPutJSON() function from utils.js to send your data back to server
+ */
+const submitButton = document.querySelector('#btnRegister');
+const form = document.getElementById('register-form');
+submitButton.addEventListener('click', async (event) => {
+    event.preventDefault();
 
-  const form = event.target;
-  const name = form.querySelector('#name').value;
-  const email = form.querySelector('#email').value;
-  const password = form.querySelector('#password').value;
-  const passwordConfirmation = form.querySelector('#passwordConfirmation').value;
-
-  // Check if password and password confirmation match
-  if (password !== passwordConfirmation) {
-    createNotification('Password and Password Confirmation do not match', 'notifications-container');
-    return;
-  }
-
-  const user = { name, email, password };
-
-  try {
-    // Send user data to the server for registration
-    const response = await postOrPutJSON('/api/register', 'POST', user);
-
-    if (response.status === 201) {
-      // Registration successful, clear the form
-      form.reset();
-      createNotification('Registration successful', 'notifications-container');
-    } else if (response.status === 400) {
-      const data = await response.json();
-      createNotification(data.error);
-    } else {
-      createNotification('An error occurred during registration', 'notifications-container');
+    let formData = new FormData(form);
+    let password = formData.get('password');
+    let passwordConfirmation = formData.get('passwordConfirmation');
+    if (password !== passwordConfirmation){
+        createNotification('Passwords do not match', 'notifications-container', false);
     }
-  } catch (error) {
-    createNotification('An error occurred during registration', 'notifications-container');
-  }
-};
+    else {
+        data = {};
+        formData.forEach((value, key) => (data[key] = value));
+        try {
+            postOrPutJSON('/api/register', 'POST', data);
+            createNotification('Registration successful', 'notifications-container', true);
+        }
+        catch (err) {
+            console.error(err);
+            createNotification('Registration fail', 'notifications-container', false);
+        }
+    }
+    form.reset()
+})
 
-// Attach the handleRegistration function to the form submit event
-const registerForm = document.getElementById('register-form');
-if (registerForm) {
-  registerForm.addEventListener('submit', handleRegistration);
-}
+

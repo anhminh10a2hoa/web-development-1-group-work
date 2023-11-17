@@ -34,7 +34,8 @@
       removeElement('users-container', `user-${userId}`);
       return createNotification(`Deleted user ${user.name}`, 'notifications-container');
     } catch (error) {
-      return createNotification('Deleted user Customer', 'notifications-container', false);
+      console.error(error);
+      return createNotification('Delete failed!', 'notifications-container', false);
     }
   };
 

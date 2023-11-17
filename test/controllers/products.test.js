@@ -2,11 +2,22 @@ const chai = require('chai');
 const expect = chai.expect;
 const { createResponse } = require('node-mocks-http');
 const { getAllProducts } = require('../../controllers/products');
+const Product = require('../../models/product');
 
 // Get products (create copies for test isolation)
-const products = require('../../products.json').map(product => ({ ...product }));
+const originalProducts = require('../../setup/products.json').map(product => ({ ...product }));
 
 describe('Products Controller', () => {
+  let products;
+
+  beforeEach(async () => {
+    // reset database
+    await Product.deleteMany({});
+    await Product.create(originalProducts);
+    const foundProducts = await Product.find({});
+    products = foundProducts.map(product => JSON.parse(JSON.stringify(product)));
+  });
+
   describe('getAllProducts()', () => {
     it('should respond with JSON', async () => {
       const response = createResponse();
