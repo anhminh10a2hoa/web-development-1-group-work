@@ -8,7 +8,6 @@ const productsUrl = "/api/products";
 const ordersUrl = "/api/orders";
 const contentType = "application/json";
 chai.use(chaiHttp);
-const { beforeAll, afterAll } = require("./setup.test")
 
 const User = require("../../models/user");
 const Product = require("../../models/product");
