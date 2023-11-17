@@ -2,12 +2,13 @@ const chai = require("chai");
 const expect = chai.expect;
 const chaiHttp = require("chai-http");
 const { handleRequest } = require("../../routes");
-
+const mongoose = require('mongoose');
 const usersUrl = "/api/users";
 const productsUrl = "/api/products";
 const ordersUrl = "/api/orders";
 const contentType = "application/json";
 chai.use(chaiHttp);
+const { beforeAll, afterAll } = require("./setup.test")
 
 const User = require("../../models/user");
 const Product = require("../../models/product");
@@ -44,6 +45,12 @@ const customerCredentials = encodeCredentials(
   customerUser.email,
   customerUser.password,
 );
+const dbConfig = {
+  host: 'localhost',
+  port: 27017,
+  db: 'Test_WebShopDb'
+};
+
 
 describe("Routes", () => {
   let allUsers;
@@ -76,6 +83,23 @@ describe("Routes", () => {
   };
 
   beforeEach(async () => {
+    if (!mongoose.connection || mongoose.connection.readyState === 0) {
+      await mongoose.connect(`mongodb://${dbConfig.host}:${dbConfig.port}/${dbConfig.db}`, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        useFindAndModify: false,
+        useCreateIndex: true,
+        family: 4
+      });
+  
+      mongoose.connection.on('error', err => {
+        console.error(err);
+      });
+  
+      mongoose.connection.on('reconnectFailed', err => {
+        throw err;
+      });
+    }
     await User.deleteMany({});
     await User.create(users);
     allUsers = await User.find({});
