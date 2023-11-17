@@ -18,7 +18,7 @@
     "test-9.5": "mocha --exit --timeout 10000 --recursive test/models",
     "test-9.6": "mocha --require test/setup.test.js --ignore 'test/8.4/**/*.js' --ignore 'test/8.5/**/*.js' --ignore 'test/8.6/**/*.js' --ignore 'test/9.2/**/*.js' --ignore 'test/auth/**/*.js'",
     "test-10.4": "mocha --require test/10.4/setup.test.js --exit --timeout 10000 --recursive test/10.4",
-    "test-own": "mocha --exit --timeout 10000 --recursive test/own",
+    "test-own": "mocha --require test/setup.test.js --timeout 10000 --recursive test/own",
     "test": "mocha --timeout 10000 --require test/setup.test.js --ignore 'test/8.4/**/*.js' --ignore 'test/8.5/**/*.js' --ignore 'test/8.6/**/*.js' --ignore 'test/9.2/**/*.js' --ignore 'test/models'"
   },
   "keywords": [],
