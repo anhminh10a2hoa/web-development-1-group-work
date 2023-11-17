@@ -1,0 +1,14 @@
+image:
+  name: "tgcslearningtech/grade-nodejs"
+  entrypoint: [""]
+
+stages:
+  - test
+
+MochaTests:
+  stage: test
+  script:
+    - /usr/local/bin/start-mongo.sh
+    - npm install
+    - npm run test-own
+  timeout: "600"
