@@ -23,15 +23,19 @@ const getAllProducts = async (response) => {
 const addNewProduct = async (response, product) => {
   // Validation checks for required fields
   const requiredFields = ['name', 'price', 'description', 'image'];
-  for (const field of requiredFields) {
-    if (!product[field]) {
-      return responseUtils.badRequest(response, `${field.charAt(0).toUpperCase() + field.slice(1)} is missing`);
-    }
+
+  const hasMissingField = !requiredFields.every(field => product[field]);
+
+  if (hasMissingField) {
+    const missingField = requiredFields.find(field => !product[field]);
+    return responseUtils.badRequest(response, `${missingField.charAt(0).toUpperCase() + missingField.slice(1)} is missing`);
   }
+
   const newProduct = new Product(product);
   await newProduct.save();
   return responseUtils.createdResource(response, newProduct);
 };
+
 
 /**
  * Get a product by ID
@@ -68,11 +72,7 @@ const updateProduct = async (response, id, productData) => {
   }
 
   // Update only the provided fields
-  for (const key in productData) {
-    if (Object.prototype.hasOwnProperty.call(productData, key)) {
-      currentProduct[key] = productData[key];
-    }
-  }
+  currentProduct.set(productData);
 
   await currentProduct.save();
   return responseUtils.sendJson(response, currentProduct);
