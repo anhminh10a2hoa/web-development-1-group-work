@@ -1,4 +1,3 @@
-/* eslint-disable no-implicit-globals */
 const mongoose = require('mongoose');
 
 /**

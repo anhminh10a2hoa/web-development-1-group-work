@@ -1,5 +1,3 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
 // Import necessary modules and utilities
 const responseUtils = require('./utils/responseUtils');
 const http = require('http');
