@@ -23,6 +23,9 @@ const getDbUrl = () => {
   return dbUrl;
 };
 
+/**
+ * Connect to database function.
+ */
 function connectDB() {
   // Do nothing if already connected
   if (!mongoose.connection || mongoose.connection.readyState === 0) {
@@ -46,11 +49,19 @@ function connectDB() {
   }
 }
 
+/**
+ * Handle critical error function.
+ * 
+ * @param {*} err error
+ */
 function handleCriticalError(err) {
   console.error(err);
   throw err;
 }
 
+/**
+ * Disconnect from database function.
+ */
 function disconnectDB() {
   mongoose.disconnect();
 }

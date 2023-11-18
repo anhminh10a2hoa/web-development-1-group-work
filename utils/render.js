@@ -1,13 +1,14 @@
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 
 const NOT_FOUND_TEMPLATE = path.resolve(__dirname, '../public/404.html');
 
 /**
  * Render file from ./public directory (calls response.end())
  *
- * @param {string} filePath
- * @param {http.ServerResponse} response
+ * @param {string} filePath The path to the file
+ * @param {http.ServerResponse} response response from server
  * @returns {void}
  */
 const renderPublic = (filePath, response) => {
@@ -24,7 +25,7 @@ const renderPublic = (filePath, response) => {
 /**
  * Render ../views/404.html (calls response.end())
  *
- * @param {http.ServerResponse} response
+ * @param {http.ServerResponse} response response from server
  * @returns {void}
  */
 const renderNotFound = response => {
@@ -34,7 +35,7 @@ const renderNotFound = response => {
 /**
  * Get Content-Type based on file extension
  *
- * @param {string} fileExtension
+ * @param {string} fileExtension file extension
  * @returns {string} contentType
  */
 const getContentType = fileExtension => {
