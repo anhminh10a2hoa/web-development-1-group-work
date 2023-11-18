@@ -3,3 +3,4 @@ public/
 .vscode/
 test/
 coverage/
+setup/
