@@ -32,5 +32,3 @@ submitButton.addEventListener('click', async (event) => {
     }
     form.reset()
 })
-
-
