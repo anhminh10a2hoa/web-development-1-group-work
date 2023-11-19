@@ -30,7 +30,7 @@ const generateRandomString = (len = 9) => {
 };
 
 // Get products (create copies for test isolation)
-const products = require('../../products.json').map(product => ({ ...product }));
+const products = require('../../setup/products.json').map(product => ({ ...product }));
 
 // Get users (create copies for test isolation)
 const users = require('../../setup/users.json').map(user => ({ ...user }));

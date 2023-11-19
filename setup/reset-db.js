@@ -25,6 +25,4 @@ const products = require('./products.json').map(product => ({ ...product }));
   await User.deleteMany({});
   await User.create(users);
   console.log('Created users');
-
-  disconnectDB();
 })();
