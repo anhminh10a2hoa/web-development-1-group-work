@@ -848,6 +848,7 @@ describe('Routes', () => {
       });
 
       it('should respond with correct data when admin credentials are received', async () => {
+        const productsData = JSON.parse(JSON.stringify(allProducts));
         const response = await chai
           .request(handleRequest)
           .get(productsUrl)
@@ -860,6 +861,7 @@ describe('Routes', () => {
       });
 
       it('should respond with correct data when customer credentials are received', async () => {
+        const productsData = JSON.parse(JSON.stringify(allProducts));
         const response = await chai
           .request(handleRequest)
           .get(productsUrl)
